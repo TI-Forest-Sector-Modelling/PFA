@@ -1,0 +1,14 @@
+matplotlib==3.8.2
+rasterio==1.4.2
+numpy==1.26.4
+geopandas==0.14.4
+shapely==2.0.6
+pickle-mixin==1.0.2
+pandas==1.5.3
+earthengine-api==0.1.347
+geemap==0.32.1
+xlsxwriter==3.1.2
+seaborn==0.13.2
+tqdm==4.66.5
+coverage==7.6.1
+tomli==2.0.2

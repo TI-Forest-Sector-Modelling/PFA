@@ -1,0 +1,86 @@
+image: python:3.9.7
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+
+stages:
+  - build
+  - test
+
+before_script:
+  - python --version
+  - python -m venv venv
+  - source venv/bin/activate
+  - python -m pip install --upgrade pip setuptools build
+#  - python -m pip install -r requirements.txt
+
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+build-package:
+  stage: build
+  allow_failure: False
+  script:
+    - echo "Current Working Directory:" "$(pwd)"
+    - python -m build .
+  artifacts:
+    when: always
+    paths:
+      - dist/*  # builds/*
+#    expire_in: 120 days
+
+# Artifacts is intended to not working currently, since test produces no output
+unit-tests:
+  stage: test
+  allow_failure: False
+  script:
+    - pip list
+    - pip install .
+    - python -m unittest
+  artifacts:
+    when: on_failure
+    paths:
+      - ./failed_unittest/*
+
+coverage-report:
+  stage: test
+  script:
+    - pip list
+    - pip install .
+    - pip install coverage
+    - coverage run --branch --source=PNV/ -m unittest
+    - coverage report
+    - coverage xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+installation-test:
+  stage: test
+  allow_failure: False
+  script:
+    - pip list
+    - WHEEL_PATH=$(find dist/ -type f -name \*.whl)
+    - echo $WHEEL_PATH
+    - pip install $WHEEL_PATH
+
+# Activate following if CLI is added
+# cli-test:
+#  stage: test
+#  allow_failure: True
+#  script:
+#    - pip list
+#    - WHEEL_PATH=$(find dist/ -type f -name \*.whl)
+#    - echo $WHEEL_PATH
+#    - pip install $WHEEL_PATH
+#    - run_timba --help
