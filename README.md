@@ -202,6 +202,9 @@ Copyright ©, 2024, Thuenen Institute.
  
 ## Acknowledgements
 This work has benefited from the support of [Dr. Andreas Kempe](https://www.thuenen.de/en/fachinstitute/waldwirtschaft/personal/wissenschaftliches-personal/dr-andreas-kempe) related to processing geospatial data.
+We also thank Carmelo Bonannella for the kind introduction to the available data and the valuable exchange. 
+Special thanks go to the entire TI-FSM author collective, especially Franziska Schier and Christian Morland, for their trustworthy collaboration,
+critical discussions, and helpful comments.
 
 ## References
 
