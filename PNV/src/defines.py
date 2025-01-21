@@ -3,7 +3,7 @@ from enum import Enum
 
 class PotentialNaturalVegetationArea(Enum):
     """
-    Class hold information and classification about IUCN and biomes from Input data
+    Class holding information and classification about IUCN and biomes from Input data.
     """
     forest_classes_6 = ["Tropical-subtropical forest biome",
                         "Temperate-boreal forests and woodlands biome",
@@ -25,7 +25,7 @@ class PotentialNaturalVegetationArea(Enum):
 
 class Coordinates(Enum):
     """
-    Class to hold coordinates of regions for different levels of aggregation (continents and fao_regions).
+    Class holding coordinates of regions for different levels of aggregation (continents and fao_regions).
     For each region coordinates are provided as [longitudes, latitudes]. This order is important for the processing.
     """
 

@@ -5,6 +5,9 @@ from PNV.src.logic import ProcessingArea
 
 class TestPNVClass(unittest.TestCase):
     def test_main(self):
+        """
+        Unittest for the main function of the PFA project.
+        """
         main.main(plot_fig=True)
 
 
