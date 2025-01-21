@@ -5,12 +5,13 @@ import zipfile
 from tqdm import tqdm
 
 
-def epsg_reproject(input_tif, output_tif, src_crs, dst_crs):
-    """Use rasterio to re-project tif files from one coordinate system in another.
-    :param input_tif: original tif file
-    :param output_tif: re-projected tif file
-    :param src_crs: source coordinate system (e.g., 4326)
-    :param dst_crs: destination reference coordinate system (e.g., 8857)
+def epsg_reproject(input_tif: str, output_tif: str, src_crs: str, dst_crs: str):
+    """
+    Uses rasterio to re-project tif files from one coordinate system to another.
+    :param input_tif: Original tif file.
+    :param output_tif: Re-projected tif file.
+    :param src_crs: Source coordinate system (e.g., 4326).
+    :param dst_crs: Destination reference coordinate system (e.g., 8857).
     """
     with rasterio.open(input_tif) as src:
         transform, width, height = calculate_default_transform(
@@ -35,10 +36,10 @@ def epsg_reproject(input_tif, output_tif, src_crs, dst_crs):
                     resampling=Resampling.nearest)
 
 
-def zip_epsg_reproject(output_tif):
+def zip_epsg_reproject(output_tif: str):
     """
     Transforms reprojected tif files into zip files. Deletes tif files after transformation.
-    :param output_tif: reprojected tif files
+    :param output_tif: Reprojected tif files.
     """
     output_tif = output_tif[:-4]
     output_zip = output_tif.split('\\')[-1]
@@ -50,13 +51,15 @@ def zip_epsg_reproject(output_tif):
         pass
 
 
-def process_all_files(input_dir, output_dir, src_crs, dst_crs):
-    """Handling of save tif files in preprocessed directory. Skip when name is already available.
-        :param input_tif: original tif file
-        :param output_tif: re-projected tif file
-        :param src_crs: source coordinate system (e.g., 4326)
-        :param dst_crs: destination reference coordinate system (e.g., 8857)
-        """
+def process_all_files(input_dir: str, output_dir: str, src_crs: str, dst_crs: str):
+    """
+    Copies saved tif files in the preprocessed directory. Skips tif files when the name is already available in the
+    preprocessed directory.
+    :param input_dir: Origin directory of tif files.
+    :param output_dir: Destination directory of tif files.
+    :param src_crs: Source coordinate system (e.g., 4326).
+    :param dst_crs: Destination reference coordinate system (e.g., 8857).
+    """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

@@ -22,9 +22,8 @@ from PNV.paths.paths import INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, OUTPUT_
 class ProcessingArea:
     def __init__(self):
         """
-        Initialization of the class ProcessingArea. Read in and preprocess input file to calculate country specific
+        Initialization of the class ProcessingArea. Read in and preprocess input file to calculate the country-specific
         area for different classes (IUCN and biomes).
-        :param class selection: Selected number of PNV class for which data is processed
         """
         self.logger = get_logger(user_path=None)
         self.time_stamp = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
@@ -70,8 +69,8 @@ class ProcessingArea:
     def plot_tif(self, tif_file: str, output_path: str):
         """
         Transforms a TIFF file into a PNG format and saves it to the specified output path.
-        :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20)
-        :param output_path: String of the output folder
+        :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
+        :param output_path: String of the output folder.
         """
         if self.class_selection == 20:
             colors = colors_20
@@ -111,9 +110,9 @@ class ProcessingArea:
 
     def calculate_area(self, tif_file: str):
         """
-        The complete global area being represented in the tiff file is calculated.
-        :param tif_file: Reads a tiff file based on the number of vegetation classes (either 6 or 20)
-        returns: number of total area in km2
+        The complete global area represented in the TIFF file is calculated.
+        :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
+        returns: Total area in km².
         """
         folder_name = os.path.normpath(tif_file)
         folder_name = folder_name.split(os.sep)[-1]
@@ -131,8 +130,8 @@ class ProcessingArea:
         """
         Calculates the number of pixel in the TIFF file for each category of vegetation area and provides the
         corresponding percentage distribution.
-        :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20)
-        returns: dataframe with km2 for different classes
+        :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
+        returns: Dataframe with km² for different classes.
         """
         if self.class_selection == 20:
             colors = colors_20
@@ -172,12 +171,12 @@ class ProcessingArea:
 
             return results_df
 
-    def get_pixel_values_by_country(self, raster_file, log_enabled=False):
+    def get_pixel_values_by_country(self, raster_file: pd.DataFrame, log_enabled=False):
         """
-        Calculates the pixels of the TIFF files for each category of vegetation area and for each country on a global
+        Calculates the pixels of the TIFF files for each category of vegetation area and each country on a global
         level.
-        :params rater_file: naturalearth_lowres
-        returns: panda dataframe with km2 for every country
+        :params rater_file: Dataframe naturalearth_lowres from the geopandas package.
+        returns: Dataframe with km² for every country.
         """
         num_classes = self.class_selection
         if num_classes == 20:
@@ -246,10 +245,10 @@ class ProcessingArea:
 
     def process_files(self, tif_files: str, output_dir: str):
         """
-        A function that consolidates all functions and calculations.
-        :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20)
-        :param output_dir: output path
-        :return: Dataframe with km2 values for every category and country
+        The function gathers all processing and calculation steps.
+        :param tif_files: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
+        :param output_dir: Output directory path.
+        :return: Dataframe with km² values for every category and country.
         """
         combined_df = pd.DataFrame()
 
@@ -276,9 +275,9 @@ class ProcessingArea:
 
     def reduce_filename(self, filename, length=31):
         """
-        Reduce the filename to ensure it fits within the Excel sheet name limit.
-        :param filename: name of every sheet in Excel output file
-        :param lenght: length of sheet name. Number of letters.
+        Reduces the filename to ensure it fits within the Excel sheet name limit.
+        :param filename: Name of every sheet in Excel output file.
+        :param length: Length of sheet name. Number of letters.
         """
         parts = filename.split('_')
         if len(parts) > 5:
@@ -289,8 +288,8 @@ class ProcessingArea:
 
     def save_results(self, combined_df: pd.DataFrame):
         """
-        Save the country specific data of different classes in .xlsx, .pkl
-        :param combinded_df: contains all information of classes for every country
+        Saves the country-specific data of different classes in .xlsx and .pkl.
+        :param combined_df: Contains all the information about the classes for every country.
         """
 
         class_selection = self.class_selection
