@@ -10,7 +10,7 @@ DST_CRS = 'EPSG:8857'
 """
 Information about TOOLBOX_INPUT:
 'SELECT_PNV_CLASS': Number of biome classes selected (selection options: 6 or 20)
-'SELECT_YEAR': Selected year for which data will be plotted (selection options: 2013 to 2060) 
+'SELECT_YEAR': Selected year for which data will be plotted (selection options: 2013 to 2080) 
 'SELECT_RCP': Selected rcp for which data will be plotted (selection options: ['rcp26', 'rcp45', 'rcp85']) 
 'SELECT_AGG_LVL': Selected aggregation level which will be used for spatial aggregation
 (selection options: ['continents', 'fao_regions', 'country'])

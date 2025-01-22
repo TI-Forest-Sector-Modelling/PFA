@@ -128,7 +128,7 @@ Users can adapt model settings by changing entries in default_parameters.py.
 #### Toolbox:  
 The toolbox offers a large range of settings to adapt the analysis to the user's needs:
 - 'SELECT_PNV_CLASS': Allows to control the number of biome classes processed [default: 6 classes]
-- 'SELECT_YEAR': Allows to control the selected year for which data will be plotted [options: 2013 to 2060]
+- 'SELECT_YEAR': Allows to control the selected year for which data will be plotted [options: 2013 to 2080]
 - 'SELECT_RCP': List of selected rcp for which data will be plotted [options: 'rcp26', 'rcp45', 'rcp85']
 - 'SELECT_AGG_LVL': Allows to control the selected aggregation level which will be used for spatial aggregation [options: 'continents', 'fao_regions', 'country']
 - 'SELECT_ISO': Allows to control the selected country ISO code which data will be plotted [options: 'any ISO3-list', 'big_n', 'continent name']. 
