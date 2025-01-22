@@ -137,7 +137,8 @@ class PnvDataAnalysis:
 
     def pnv_data_extrapolation(self):
         """
-        Extrapolates PNV data between provided time points (1979, 2040, 2060).
+        Extrapolates PNV data between provided time points (1979-2013, 2040-2060, 2061-2080). Within the provided time
+        periods, PNV are assumed to be constant in line with Bonnanella et al. (2023).
         :return: Dictionary of extrapolated pnv_data dataframes for each RCP scenario.
         """
         self.logger.info(f"Extrapolate PNV data")
@@ -155,20 +156,35 @@ class PnvDataAnalysis:
                     if period == 2040:
                         period_start = 2013
                         data_start = historic_data["area_tsd_ha"]
+                        period_len = period_end - period_start
+                        yearly_dev = (data_end - data_start) / period_len
+                        for year in range(period_start, period_end):  # + 1 to take 2040
+                            if (year == 2013) or (year == 2040) or (year == 2061):
+                                pnv_rcp_year = pd.DataFrame(data_start).rename(columns={"area_tsd_ha": year})
+                            else:
+                                pnv_rcp_year = pnv_rcp_extrapolation[year - 1] + yearly_dev
+                                pnv_rcp_year = pd.DataFrame(pnv_rcp_year).rename(columns={0: year})
+
+                            pnv_rcp_extrapolation = pd.concat([pnv_rcp_extrapolation, pnv_rcp_year], axis=1)
+
                     if period == 2061:
                         period_start = 2040
+                        period_end = 2060
                         data_start = pnv_rcp[pnv_rcp["period"] == period_start]["area_tsd_ha"].reset_index(drop=True)
 
-                    period_len = period_end - period_start
-                    yearly_dev = (data_end - data_start) / period_len
-                    for year in range(period_start, period_end):
-                        if (year == 2013) or (year == 2040) or (year == 2061):
-                            pnv_rcp_year = pd.DataFrame(data_start).rename(columns={"area_tsd_ha": year})
-                        else:
-                            pnv_rcp_year = pnv_rcp_extrapolation[year - 1] + yearly_dev
-                            pnv_rcp_year = pd.DataFrame(pnv_rcp_year).rename(columns={0: year})
+                        for year in range(period_start, period_end + 1):
+                                pnv_rcp_year = pd.DataFrame(data_start).rename(columns={"area_tsd_ha": year})
+                                pnv_rcp_extrapolation = pd.concat([pnv_rcp_extrapolation, pnv_rcp_year], axis=1)
 
-                        pnv_rcp_extrapolation = pd.concat([pnv_rcp_extrapolation, pnv_rcp_year], axis=1)
+                        period_start = 2061
+                        period_end = 2080
+
+                        data_start = pnv_rcp[pnv_rcp["period"] == period_start]["area_tsd_ha"].reset_index(drop=True)
+
+                        for year in range(period_start, period_end + 1):
+                            pnv_rcp_year = pd.DataFrame(data_start).rename(columns={"area_tsd_ha": year})
+                            pnv_rcp_extrapolation = pd.concat([pnv_rcp_extrapolation, pnv_rcp_year], axis=1)
+
                 pnv_rcp_extrapolation = pnv_rcp_extrapolation.drop_duplicates().reset_index(drop=True)
 
                 self.pnv_data_extrapolated[f"{key}"] = pnv_rcp_extrapolation
