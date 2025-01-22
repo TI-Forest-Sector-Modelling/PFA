@@ -35,6 +35,7 @@ class PnvDataAnalysis:
         self.selected_rcp = user_input['SELECT_RCP']
         self.selected_agg_lvl = user_input['SELECT_AGG_LVL']
         self.selected_iso = user_input['SELECT_ISO']
+        self.rel_val_tolerance = user_input['REL_VAL_TOLERANCE']
 
         self.save_figures = user_input['SAVE_FIGURE']
 
@@ -172,6 +173,44 @@ class PnvDataAnalysis:
 
                 self.pnv_data_extrapolated[f"{key}"] = pnv_rcp_extrapolation
 
+    def land_surface_validation(self, rel_tolerance):
+        """
+        Validates processed data with land surface data from WDI for the year 2013. Countries without WDI land surface
+        data are not validated (ESH, FLK, ATF, TWN, CYN, XKX).
+        :param rel_tolerance: Relative tolerance for the validation when comparing processed data with land surface data
+        """
+        self.logger.info(f"Validation of processed data using WDI land surface data")
+        validation_data = self.geo_data[["ISO", "WDI_land_surface"]]
+
+        for key in self.pnv_data_extrapolated.keys():
+            data_to_validate = self.pnv_data_extrapolated[key]
+
+            for year in [2013, 2040, 2060]:
+                data_to_validate_year = data_to_validate[["ISO", "scenario", "pnv_class", year]]
+                data_to_validate_year = data_to_validate_year.groupby(["ISO", "scenario"])[year].sum().reset_index()
+                data_to_validate_year = data_to_validate_year.merge(validation_data, left_on="ISO", right_on="ISO",
+                                                                    how="left")
+                data_to_validate_year = data_to_validate_year.dropna(axis=0, how="any").reset_index(drop=True)
+
+                validation_result = np.allclose(np.array(data_to_validate_year[year], dtype=float),
+                                                np.array(data_to_validate_year["WDI_land_surface"], dtype=float),
+                                                rtol=rel_tolerance)
+
+                if not validation_result:
+                    validation_result_index = np.isclose(np.array(data_to_validate_year[year], dtype=float),
+                                                         np.array(data_to_validate_year["WDI_land_surface"],
+                                                                  dtype=float),
+                                                         rtol=rel_tolerance)
+                    validation_result_index = pd.DataFrame(validation_result_index)
+                    validation_result_index = validation_result_index[validation_result_index[0] == False].index
+                    iso_failed_validation = data_to_validate_year.loc[validation_result_index]["ISO"].unique()
+                    self.logger.info(f"Validation failed for scenario {key} in {year} for {len(iso_failed_validation):}"
+                                     f" countries")
+                    self.logger.info(f"{iso_failed_validation}")
+
+                if validation_result:
+                    self.logger.info(f"Validation succeeded for scenario {key} in {year} for all countries")
+
     def filter_forest_pnv_data(self):
         """
         Filters out and saves PNV data of forest-related PNV classes in separate dictionaries.
@@ -203,6 +242,7 @@ class PnvDataAnalysis:
         self.pnv_raw_data = self.reformate_pnv_data()
         self.pnv_data_dict = self.split_pnv_data()
         self.pnv_data_extrapolation()
+        self.land_surface_validation(rel_tolerance=self.rel_val_tolerance)
         self.filter_forest_pnv_data()
 
     def pnv_bar_plot(self, plot_option: str, aggregate_forest: bool):
