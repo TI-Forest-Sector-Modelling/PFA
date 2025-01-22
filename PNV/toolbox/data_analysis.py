@@ -23,8 +23,8 @@ from PNV.src.defines import PotentialNaturalVegetationArea, Coordinates
 class PnvDataAnalysis:
     def __init__(self, user_input: dict):
         """
-        Initialization of the class PnvDataAnalysis and read in of input data.
-        :param user_input: Dictionary of input parameters
+        Initialization of the class PnvDataAnalysis and read-in of input data.
+        :param user_input: Dictionary of input parameters.
         """
 
         self.current_dt = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
@@ -53,7 +53,7 @@ class PnvDataAnalysis:
     def readin_pnv_data(self) -> pd.DataFrame:
         """
         Deserialize PNV data from pkl-files provided by the main application.
-        :return: Deserialized pnv_data dataframe
+        :return: Deserialized pnv_data dataframe.
         """
         filename_path = max([f for f in pathlib.Path(
             os.path.abspath(OUTPUT_PATH)).glob(f'*_{self.selected_pnv_classes}_class_combined.pkl')],
@@ -65,8 +65,8 @@ class PnvDataAnalysis:
 
     def readin_geo_data(self) -> pd.DataFrame:
         """
-        Readin additional geographic data.
-        :return: geo_data dataframe
+        Read-in additional geographic data.
+        :return: geo_data dataframe.
         """
         self.logger.info(f"Readin geographic data from {self.input_folder}")
         src_filepath = os.path.join(self.input_folder, 'geo_data.csv')
@@ -76,8 +76,10 @@ class PnvDataAnalysis:
 
     def define_format(self, paper_format: bool):
         """
-        Define an uniform format for all figures.
-        :return: Dictionary with formats
+        Defines a uniform format for all figures.
+        :param paper_format: Boolean controlling if the font size is set for publications (True) or presentations
+         (False).
+        :return: Dictionary with formats.
         """
         if paper_format:
             fontsize = {"title": 10, "ticks": 9, "labels": 9}
@@ -88,8 +90,8 @@ class PnvDataAnalysis:
 
     def split_pnv_data(self):
         """
-        PNV data are splitted regarding the RCP-scenarios add save as a dictionary.
-        :return: Dictionary of pnv_data dataframes for each RCP-scenario
+        PNV data are split regarding the RCP scenarios and saved as a dictionary.
+        :return: Dictionary of pnv_data dataframes for each RCP scenario.
         """
         self.logger.info(f"Split PNV data")
         splitted_data = self.pnv_raw_data.copy()
@@ -109,8 +111,8 @@ class PnvDataAnalysis:
 
     def reformate_pnv_data(self) -> pd.DataFrame:
         """
-        Reformatation steps of PNV data, including conversion steps, data curration steps, reformatation.
-        :return: Reformated PNV dataframe
+        Steps for reformating PNV data, including conversion and data curration steps.
+        :return: Reformated PNV dataframe.
         """
         self.logger.info(f"Reformate PNV data")
         self.pnv_raw_data["total_area_ha"] = self.pnv_raw_data["Total Area (km^2)"] * 100
@@ -134,8 +136,8 @@ class PnvDataAnalysis:
 
     def pnv_data_extrapolation(self):
         """
-        Extrapolate PNV data between provided time points (1979, 2040, 2060).
-        :return: Dictionary of extrapolated pnv_data dataframes for each RCP-scenario
+        Extrapolates PNV data between provided time points (1979, 2040, 2060).
+        :return: Dictionary of extrapolated pnv_data dataframes for each RCP scenario.
         """
         self.logger.info(f"Extrapolate PNV data")
         historic_data = self.pnv_data_dict["history"].reset_index(drop=True)
@@ -172,8 +174,8 @@ class PnvDataAnalysis:
 
     def filter_forest_pnv_data(self):
         """
-        Filter out and save PNV data of forest-related PNV classes in seperate dictionaries.
-        :return: Dictionaries with PNV data of forest-related PNV classes
+        Filters out and saves PNV data of forest-related PNV classes in separate dictionaries.
+        :return: Dictionaries with PNV data of forest-related PNV classes.
         """
         self.logger.info(f"Filter forest-related classes from NVP data")
         if self.selected_pnv_classes == 6:
@@ -205,11 +207,11 @@ class PnvDataAnalysis:
 
     def pnv_bar_plot(self, plot_option: str, aggregate_forest: bool):
         """
-        Generate a barplot of selected PNV data with different visualization options.
+        Generates a barplot of selected PNV data with different visualization options.
         :param plot_option: Flag to plot absolute forest-related PNV areas [tsd ha] (= "abs") or relative forest
-        covers [%] (= "rel")
+        covers [%] (= "rel").
         :param aggregate_forest: Flag to plot summed forest-related PNV classes (= True) or separate forest-related PNV
-        classes (= False)
+        classes (= False).
         """
         self.logger.info(f"Generate barplot of PNV data for {self.selected_rcp} in {self.selected_year}")
         fontsize = self.fontsize
@@ -338,10 +340,10 @@ class PnvDataAnalysis:
 
     def pnv_world_map(self, fig_option: str, winkel_reproject: bool, dissolve_map_regions: bool):
         """
-        Generate a world map with selected PNV data with different vizualisation options.
-        :param fig_option: Flag to select the figure type ("bar_chart" or "pie_chart")
+        Generates a world map with selected PNV data with different visualisation options.
+        :param fig_option: Flag to select the figure type ("bar_chart" or "pie_chart").
         :param winkel_reproject: Flag to activate the reprojection to Winkel triple projection
-        :param dissolve_map_regions: Flag to activate the dissolution of country borders
+        :param dissolve_map_regions: Flag to activate the dissolution of country borders.
         """
         self.logger.info(f"Generate world map with PNV data for {self.selected_rcp} in {self.selected_year}")
         fontsize = self.fontsize
@@ -445,7 +447,21 @@ class PnvDataAnalysis:
             else:
                 lon_lat_dict_new = Coordinates.coord_continents_default_proj.value
 
-        def build_geolocalized_subfig(mapx, mapy, ax, width, data, title, y_max, fig_option, bar_plot_col, fontsize):
+        def build_geolocalized_subfig(mapx: float, mapy: float, ax: int, width: float, data: pd.DataFrame, title: str,
+                                      y_max: float, fig_option: str, bar_plot_col: int, fontsize: dict):
+            """
+            Builds sub-figures within a larger map based on user inputs related to the geolocalization.
+            :param mapx: Longitude of the sub-figure's origin.
+            :param mapy: Latitude of the sub-figure's origin.
+            :param ax: Current figure axes.
+            :param width: Width of the sub-figure.
+            :param data: Plotted data in the sub-figure.
+            :param title: Title of the sub-figure.
+            :param y_max: Maximal value of the y-axis.
+            :param fig_option: Chosen figure option by the user.
+            :param bar_plot_col: Year of the data that is plotted.
+            :param fontsize: Font size used for the sub-figure's text.
+            """
             ax_h = inset_axes(ax, width=width,
                               height=width,
                               loc=3,
@@ -543,6 +559,9 @@ class PnvDataAnalysis:
                 dpi=300, bbox_inches='tight')
 
     def toolbox_plot(self):
+        """
+        Bundles and executes all functions to process and visualize the data based on the user input.
+        """
 
         self.preprocess_pnv_data()
 
