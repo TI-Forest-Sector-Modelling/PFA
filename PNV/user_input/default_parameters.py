@@ -19,6 +19,7 @@ Information about TOOLBOX_INPUT:
     - 'any ISO3-list' option shows all countries in the list of ISO3 codes (e.g., ['GER', 'FRA', 'SWE'] 
     - 'big_n' option shows the countries with n-largest forest area (e.g., ['big_10'] or ['big_5'])
     - 'continent name' option shows all countries within the selected continent (e.g. ['South America'] or ['Asia'])
+'REL_VAL_TOLERANCE': Relative tolerance applied for the validation of aggregated data with land surface data from WDI 
 'PAPER_FORMAT': Controls the fontsize in figures
 'SAVE_FIGURE': Controls if the figures are saved in the output directory
 'OUTPUT_NAME': Name of output file
@@ -30,6 +31,7 @@ TOOLBOX_INPUT = {
     'SELECT_RCP': ['rcp26', 'rcp45', 'rcp85'],
     'SELECT_AGG_LVL': 'country',
     'SELECT_ISO': ['big_10'],
+    'REL_VAL_TOLERANCE': 0.05,
     'PAPER_FORMAT': True,
     'SAVE_FIGURE': True,
     'OUTPUT_NAME': 'test_test_output'
