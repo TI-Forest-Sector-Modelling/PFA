@@ -1,176 +1,176 @@
-ISO,continents,fao_regions
-FJI,Oceania,Oceania
-TZA,Africa,Eastern and Southern Africa
-ESH,Africa,Northern Africa
-CAN,North and Central America,North America
-USA,North and Central America,North America
-KAZ,Asia,Western and Central Asia
-UZB,Asia,Western and Central Asia
-PNG,Oceania,Oceania
-IDN,Asia,South and Southeast Asia
-ARG,South America,South America
-CHL,South America,South America
-COD,Africa,Western and Central Africa
-SOM,Africa,Eastern and Southern Africa
-KEN,Africa,Eastern and Southern Africa
-SDN,Africa,Northern Africa
-TCD,Africa,Western and Central Africa
-HTI,North and Central America,Central America
-DOM,North and Central America,Central America
-RUS,Russian Federation,Russian Federation
-BHS,North and Central America,Central America
-FLK,South America,South America
-NOR,Europe,Europe
-GRL,North and Central America,North America
-ATF,Europe,Europe
-TLS,Asia,South and Southeast Asia
-ZAF,Africa,Eastern and Southern Africa
-LSO,Africa,Eastern and Southern Africa
-MEX,North and Central America,Central America
-URY,South America,South America
-BRA,South America,South America
-BOL,South America,South America
-PER,South America,South America
-COL,South America,South America
-PAN,North and Central America,Central America
-CRI,North and Central America,Central America
-NIC,North and Central America,Central America
-HND,North and Central America,Central America
-SLV,North and Central America,Central America
-GTM,North and Central America,Central America
-BLZ,North and Central America,Central America
-VEN,South America,South America
-GUY,South America,South America
-SUR,South America,South America
-FRA,Europe,Europe
-ECU,South America,South America
-PRI,North and Central America,Central America
-JAM,North and Central America,Central America
-CUB,North and Central America,Central America
-ZWE,Africa,Eastern and Southern Africa
-BWA,Africa,Eastern and Southern Africa
-NAM,Africa,Western and Central Africa
-SEN,Africa,Western and Central Africa
-MLI,Africa,Western and Central Africa
-MRT,Africa,Northern Africa
-BEN,Africa,Western and Central Africa
-NER,Africa,Western and Central Africa
-NGA,Africa,Western and Central Africa
-CMR,Africa,Western and Central Africa
-TGO,Africa,Western and Central Africa
-GHA,Africa,Western and Central Africa
-CIV,Africa,Western and Central Africa
-GIN,Africa,Western and Central Africa
-GNB,Africa,Western and Central Africa
-LBR,Africa,Western and Central Africa
-SLE,Africa,Western and Central Africa
-BFA,Africa,Western and Central Africa
-CAF,Africa,Western and Central Africa
-COG,Africa,Western and Central Africa
-GAB,Africa,Western and Central Africa
-GNQ,Africa,Western and Central Africa
-ZMB,Africa,Eastern and Southern Africa
-MWI,Africa,Eastern and Southern Africa
-MOZ,Africa,Eastern and Southern Africa
-SWZ,Africa,Eastern and Southern Africa
-AGO,Africa,Western and Central Africa
-BDI,Africa,Eastern and Southern Africa
-ISR,Asia,Western and Central Asia
-LBN,Asia,Western and Central Asia
-MDG,Africa,Eastern and Southern Africa
-PSE,Asia,Western and Central Asia
-GMB,Africa,Western and Central Africa
-TUN,Africa,Northern Africa
-DZA,Africa,Northern Africa
-JOR,Asia,Western and Central Asia
-ARE,Asia,Western and Central Asia
-QAT,Asia,Western and Central Asia
-KWT,Asia,Western and Central Asia
-IRQ,Asia,Western and Central Asia
-OMN,Asia,Western and Central Asia
-VUT,Oceania,Oceania
-KHM,Asia,South and Southeast Asia
-THA,Asia,South and Southeast Asia
-LAO,Asia,South and Southeast Asia
-MMR,Asia,South and Southeast Asia
-VNM,Asia,South and Southeast Asia
-PRK,Asia,East Asia
-KOR,Asia,East Asia
-MNG,Asia,South and Southeast Asia
-IND,Asia,South and Southeast Asia
-BGD,Asia,South and Southeast Asia
-BTN,Asia,South and Southeast Asia
-NPL,Asia,East Asia
-PAK,Asia,South and Southeast Asia
-AFG,Asia,Western and Central Asia
-TJK,Asia,Western and Central Asia
-KGZ,Asia,Western and Central Asia
-TKM,Asia,Western and Central Asia
-IRN,Asia,Western and Central Asia
-SYR,Asia,Western and Central Asia
-ARM,Asia,Western and Central Asia
-SWE,Europe,Europe
-BLR,Europe,Europe
-UKR,Europe,Europe
-POL,Europe,Europe
-AUT,Europe,Europe
-HUN,Europe,Europe
-MDA,Europe,Europe
-ROU,Europe,Europe
-LTU,Europe,Europe
-LVA,Europe,Europe
-EST,Europe,Europe
-DEU,Europe,Europe
-BGR,Europe,Europe
-GRC,Europe,Europe
-TUR,Asia,Western and Central Asia
-ALB,Europe,Europe
-HRV,Europe,Europe
-CHE,Europe,Europe
-LUX,Europe,Europe
-BEL,Europe,Europe
-NLD,Europe,Europe
-PRT,Europe,Europe
-ESP,Europe,Europe
-IRL,Europe,Europe
-NCL,Oceania,Oceania
-SLB,Oceania,Oceania
-NZL,Oceania,Oceania
-AUS,Oceania,Oceania
-LKA,Asia,South and Southeast Asia
-CHN,Asia,East Asia
-TWN,Asia,East Asia
-ITA,Europe,Europe
-DNK,Europe,Europe
-GBR,Europe,Europe
-ISL,Europe,Europe
-AZE,Asia,Western and Central Asia
-GEO,Europe,Europe
-PHL,Asia,South and Southeast Asia
-MYS,Asia,South and Southeast Asia
-BRN,Asia,South and Southeast Asia
-SVN,Europe,Europe
-FIN,Europe,Europe
-SVK,Europe,Europe
-CZE,Europe,Europe
-ERI,Africa,Eastern and Southern Africa
-JPN,Asia,East Asia
-PRY,South America,South America
-YEM,Asia,Western and Central Asia
-SAU,Asia,Western and Central Asia
-CYN,Europe,Europe
-CYP,Asia,Western and Central Asia
-MAR,Africa,Northern Africa
-EGY,Africa,Northern Africa
-LBY,Africa,Northern Africa
-ETH,Africa,Eastern and Southern Africa
-DJI,Africa,Eastern and Southern Africa
-UGA,Africa,Eastern and Southern Africa
-RWA,Africa,Eastern and Southern Africa
-BIH,Europe,Europe
-MKD,Europe,Europe
-SRB,Europe,Europe
-MNE,Europe,Europe
-XKX,Europe,Europe
-TTO,North and Central America,Central America
-SSD,Africa,Eastern and Southern Africa
+ISO,continents,fao_regions,Country Code,WDI_land_surface
+FJI,Oceania,Oceania,FJI,18270
+TZA,Africa,Eastern and Southern Africa,TZA,885800
+ESH,Africa,Northern Africa,,
+CAN,North and Central America,North America,CAN,8965590
+USA,North and Central America,North America,USA,9147420
+KAZ,Asia,Western and Central Asia,KAZ,2699700
+UZB,Asia,Western and Central Asia,UZB,435789
+PNG,Oceania,Oceania,PNG,452860
+IDN,Asia,South and Southeast Asia,IDN,1877519
+ARG,South America,South America,ARG,2736690
+CHL,South America,South America,CHL,743532
+COD,Africa,Western and Central Africa,COD,2267050
+SOM,Africa,Eastern and Southern Africa,SOM,627340
+KEN,Africa,Eastern and Southern Africa,KEN,569140
+SDN,Africa,Northern Africa,SDN,1868000
+TCD,Africa,Western and Central Africa,TCD,1259200
+HTI,North and Central America,Central America,HTI,27560
+DOM,North and Central America,Central America,DOM,48310
+RUS,Russian Federation,Russian Federation,RUS,16376870
+BHS,North and Central America,Central America,BHS,10010
+FLK,South America,South America,,
+NOR,Europe,Europe,NOR,365122.96
+GRL,North and Central America,North America,GRL,410450
+ATF,Europe,Europe,,
+TLS,Asia,South and Southeast Asia,TLS,14870
+ZAF,Africa,Eastern and Southern Africa,ZAF,1213090
+LSO,Africa,Eastern and Southern Africa,LSO,30360
+MEX,North and Central America,Central America,MEX,1943950
+URY,South America,South America,URY,175020
+BRA,South America,South America,BRA,8358140
+BOL,South America,South America,BOL,1083300
+PER,South America,South America,PER,1280000
+COL,South America,South America,COL,1109500
+PAN,North and Central America,Central America,PAN,74340
+CRI,North and Central America,Central America,CRI,51060
+NIC,North and Central America,Central America,NIC,120340
+HND,North and Central America,Central America,HND,111890
+SLV,North and Central America,Central America,SLV,20720
+GTM,North and Central America,Central America,GTM,107160
+BLZ,North and Central America,Central America,BLZ,22810
+VEN,South America,South America,VEN,882050
+GUY,South America,South America,GUY,196850
+SUR,South America,South America,SUR,160507.61
+FRA,Europe,Europe,FRA,547557
+ECU,South America,South America,ECU,248360
+PRI,North and Central America,Central America,PRI,8870
+JAM,North and Central America,Central America,JAM,10830
+CUB,North and Central America,Central America,CUB,104220
+ZWE,Africa,Eastern and Southern Africa,ZWE,386850
+BWA,Africa,Eastern and Southern Africa,BWA,566730
+NAM,Africa,Western and Central Africa,NAM,823290
+SEN,Africa,Western and Central Africa,SEN,192530
+MLI,Africa,Western and Central Africa,MLI,1220190
+MRT,Africa,Northern Africa,MRT,1030700
+BEN,Africa,Western and Central Africa,BEN,112760
+NER,Africa,Western and Central Africa,NER,1266700
+NGA,Africa,Western and Central Africa,NGA,910770
+CMR,Africa,Western and Central Africa,CMR,472710
+TGO,Africa,Western and Central Africa,TGO,54390
+GHA,Africa,Western and Central Africa,GHA,227540
+CIV,Africa,Western and Central Africa,CIV,318000
+GIN,Africa,Western and Central Africa,GIN,245720
+GNB,Africa,Western and Central Africa,GNB,28120
+LBR,Africa,Western and Central Africa,LBR,96320
+SLE,Africa,Western and Central Africa,SLE,72180
+BFA,Africa,Western and Central Africa,BFA,273600
+CAF,Africa,Western and Central Africa,CAF,622980
+COG,Africa,Western and Central Africa,COG,341500
+GAB,Africa,Western and Central Africa,GAB,257670
+GNQ,Africa,Western and Central Africa,GNQ,28050
+ZMB,Africa,Eastern and Southern Africa,ZMB,743390
+MWI,Africa,Eastern and Southern Africa,MWI,94280
+MOZ,Africa,Eastern and Southern Africa,MOZ,786380
+SWZ,Africa,Eastern and Southern Africa,SWZ,17200
+AGO,Africa,Western and Central Africa,AGO,1246700
+BDI,Africa,Eastern and Southern Africa,BDI,25680
+ISR,Asia,Western and Central Asia,ISR,21640
+LBN,Asia,Western and Central Asia,LBN,10230
+MDG,Africa,Eastern and Southern Africa,MDG,581800
+PSE,Asia,Western and Central Asia,PSE,6020
+GMB,Africa,Western and Central Africa,GMB,10120
+TUN,Africa,Northern Africa,TUN,155360
+DZA,Africa,Northern Africa,DZA,2381740
+JOR,Asia,Western and Central Asia,JOR,88780
+ARE,Asia,Western and Central Asia,ARE,71020
+QAT,Asia,Western and Central Asia,QAT,11610
+KWT,Asia,Western and Central Asia,KWT,17820
+IRQ,Asia,Western and Central Asia,IRQ,434128
+OMN,Asia,Western and Central Asia,OMN,309500
+VUT,Oceania,Oceania,VUT,12190
+KHM,Asia,South and Southeast Asia,KHM,176520
+THA,Asia,South and Southeast Asia,THA,510890
+LAO,Asia,South and Southeast Asia,LAO,230800
+MMR,Asia,South and Southeast Asia,MMR,653080
+VNM,Asia,South and Southeast Asia,VNM,313007.33
+PRK,Asia,East Asia,PRK,120410
+KOR,Asia,East Asia,KOR,97426
+MNG,Asia,South and Southeast Asia,MNG,1557253.053
+IND,Asia,South and Southeast Asia,IND,2973190
+BGD,Asia,South and Southeast Asia,BGD,130170
+BTN,Asia,South and Southeast Asia,BTN,38117
+NPL,Asia,East Asia,NPL,143350
+PAK,Asia,South and Southeast Asia,PAK,770880
+AFG,Asia,Western and Central Asia,AFG,652230
+TJK,Asia,Western and Central Asia,TJK,139960
+KGZ,Asia,Western and Central Asia,KGZ,191800
+TKM,Asia,Western and Central Asia,TKM,469930
+IRN,Asia,Western and Central Asia,IRN,1628760
+SYR,Asia,Western and Central Asia,SYR,183630
+ARM,Asia,Western and Central Asia,ARM,28470
+SWE,Europe,Europe,SWE,407339.7
+BLR,Europe,Europe,BLR,202908
+UKR,Europe,Europe,UKR,579320
+POL,Europe,Europe,POL,306210
+AUT,Europe,Europe,AUT,82520
+HUN,Europe,Europe,HUN,90530
+MDA,Europe,Europe,MDA,32880
+ROU,Europe,Europe,ROU,230030
+LTU,Europe,Europe,LTU,62675
+LVA,Europe,Europe,LVA,62227
+EST,Europe,Europe,EST,43470
+DEU,Europe,Europe,DEU,348880
+BGR,Europe,Europe,BGR,108560
+GRC,Europe,Europe,GRC,128900
+TUR,Asia,Western and Central Asia,TUR,769630
+ALB,Europe,Europe,ALB,27400
+HRV,Europe,Europe,HRV,55964
+CHE,Europe,Europe,CHE,39511.428
+LUX,Europe,Europe,LUX,2574.46
+BEL,Europe,Europe,BEL,30333
+NLD,Europe,Europe,NLD,33690
+PRT,Europe,Europe,PRT,91605.2
+ESP,Europe,Europe,ESP,500210
+IRL,Europe,Europe,IRL,68890
+NCL,Oceania,Oceania,NCL,18280
+SLB,Oceania,Oceania,SLB,27990
+NZL,Oceania,Oceania,NZL,263310
+AUS,Oceania,Oceania,AUS,7682300
+LKA,Asia,South and Southeast Asia,LKA,62710
+CHN,Asia,East Asia,CHN,9388211
+TWN,Asia,East Asia,,
+ITA,Europe,Europe,ITA,295718
+DNK,Europe,Europe,DNK,40000
+GBR,Europe,Europe,GBR,241930
+ISL,Europe,Europe,ISL,100250
+AZE,Asia,Western and Central Asia,AZE,82659
+GEO,Europe,Europe,GEO,69490
+PHL,Asia,South and Southeast Asia,PHL,298170
+MYS,Asia,South and Southeast Asia,MYS,328550
+BRN,Asia,South and Southeast Asia,BRN,5270
+SVN,Europe,Europe,SVN,20140
+FIN,Europe,Europe,FIN,303890
+SVK,Europe,Europe,SVK,48088
+CZE,Europe,Europe,CZE,77220
+ERI,Africa,Eastern and Southern Africa,ERI,121049.278
+JPN,Asia,East Asia,JPN,364500
+PRY,South America,South America,PRY,397300
+YEM,Asia,Western and Central Asia,YEM,527970
+SAU,Asia,Western and Central Asia,SAU,2149690
+CYN,Europe,Europe,,
+CYP,Asia,Western and Central Asia,CYP,9240
+MAR,Africa,Northern Africa,MAR,446300
+EGY,Africa,Northern Africa,EGY,995450
+LBY,Africa,Northern Africa,LBY,1759540
+ETH,Africa,Eastern and Southern Africa,ETH,1128572.1
+DJI,Africa,Eastern and Southern Africa,DJI,23180
+UGA,Africa,Eastern and Southern Africa,UGA,200520
+RWA,Africa,Eastern and Southern Africa,RWA,24670
+BIH,Europe,Europe,BIH,51200
+MKD,Europe,Europe,MKD,25220
+SRB,Europe,Europe,SRB,87460
+MNE,Europe,Europe,MNE,13450
+XKX,Europe,Europe,XKX,
+TTO,North and Central America,Central America,TTO,5130
+SSD,Africa,Eastern and Southern Africa,SSD,631930
