@@ -196,12 +196,12 @@ class PnvDataAnalysis:
         :param rel_tolerance: Relative tolerance for the validation when comparing processed data with land surface data
         """
         self.logger.info(f"Validation of processed data using WDI land surface data")
-        validation_data = self.geo_data[["ISO", "WDI_land_surface"]]
+        validation_data = self.geo_data[["ISO", "WDI_land_surface_km2"]]
 
         for key in self.pnv_data_extrapolated.keys():
             data_to_validate = self.pnv_data_extrapolated[key]
 
-            for year in [2013, 2040, 2060]:
+            for year in [2013, 2040, 2080]:
                 data_to_validate_year = data_to_validate[["ISO", "scenario", "pnv_class", year]]
                 data_to_validate_year = data_to_validate_year.groupby(["ISO", "scenario"])[year].sum().reset_index()
                 data_to_validate_year = data_to_validate_year.merge(validation_data, left_on="ISO", right_on="ISO",
@@ -209,12 +209,12 @@ class PnvDataAnalysis:
                 data_to_validate_year = data_to_validate_year.dropna(axis=0, how="any").reset_index(drop=True)
 
                 validation_result = np.allclose(np.array(data_to_validate_year[year], dtype=float),
-                                                np.array(data_to_validate_year["WDI_land_surface"], dtype=float),
+                                                np.array(data_to_validate_year["WDI_land_surface_km2"], dtype=float),
                                                 rtol=rel_tolerance)
 
                 if not validation_result:
                     validation_result_index = np.isclose(np.array(data_to_validate_year[year], dtype=float),
-                                                         np.array(data_to_validate_year["WDI_land_surface"],
+                                                         np.array(data_to_validate_year["WDI_land_surface_km2"],
                                                                   dtype=float),
                                                          rtol=rel_tolerance)
                     validation_result_index = pd.DataFrame(validation_result_index)
