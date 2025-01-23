@@ -46,6 +46,7 @@ class PnvDataAnalysis:
         self.pnv_raw_data = self.readin_pnv_data()
         self.geo_data = self.readin_geo_data()
         self.fontsize = self.define_format(paper_format=user_input['PAPER_FORMAT'])
+        self.color_palette = self.define_color_palette(selected_pnv_classes=user_input['SELECT_PNV_CLASS'])
 
         self.pnv_data_extrapolated = {}
         self.pnv_forest_data_raw = {}
@@ -88,6 +89,18 @@ class PnvDataAnalysis:
             fontsize = {"title": 13, "ticks": 12, "labels": 12}
 
         return fontsize
+
+    def define_color_palette(self, selected_pnv_classes: int):
+        """
+        Defines the color palette for all figures based on the number of selected classes.
+        :param selected_pnv_classes: Number of selected classes.
+        :return: Color palette.
+        """
+        if self.selected_pnv_classes == 6:
+            color_palette = sns.color_palette("Accent")
+        else:
+            color_palette = plt.get_cmap('Spectral')(np.linspace(0, 1.5, self.selected_pnv_classes))
+        return color_palette
 
     def split_pnv_data(self):
         """
@@ -261,6 +274,84 @@ class PnvDataAnalysis:
         self.land_surface_validation(rel_tolerance=self.rel_val_tolerance)
         self.filter_forest_pnv_data()
 
+    def build_geolocalized_subfig(self, mapx: float, mapy: float, ax: int, width: float, data: pd.DataFrame, title: str,
+                                  y_max: float, fig_option: str, bar_plot_col: int, fontsize: dict):
+        """
+        Builds sub-figures within a larger map based on user inputs related to the geolocalization.
+        :param mapx: Longitude of the sub-figure's origin.
+        :param mapy: Latitude of the sub-figure's origin.
+        :param ax: Current figure axes.
+        :param width: Width of the sub-figure.
+        :param data: Plotted data in the sub-figure.
+        :param title: Title of the sub-figure.
+        :param y_max: Maximal value of the y-axis.
+        :param fig_option: Chosen figure option by the user.
+        :param bar_plot_col: Year of the data that is plotted.
+        :param fontsize: Font size used for the sub-figure's text.
+        """
+        ax_h = inset_axes(ax, width=width,
+                          height=width,
+                          loc=3,
+                          bbox_to_anchor=(mapx, mapy),
+                          bbox_transform=ax.transData,
+                          borderpad=0,
+                          axes_kwargs={'alpha': 0.35, 'visible': True})
+        if fig_option == 'bar_chart':
+            if len(self.selected_rcp) > 1:
+                # Barchart for more than one RCP
+                scenario = tuple(data["scenario"])
+                pnv_class = {}
+                for col in data.columns[2:]:
+                    pnv_class[col] = np.array(data[col])
+                width = 0.5
+                bottom = np.zeros(len(scenario))
+                color_runner = 0
+
+                for boolean, pnv in pnv_class.items():
+                    ax_h.bar(scenario, pnv, width, label=boolean, bottom=bottom,
+                             color=self.color_palette[color_runner])
+                    bottom = [bottom[x] + pnv[x] for x in range(0, len(scenario))]
+                    color_runner += 1
+                ax_h.set_xticks(list(data["scenario"]))
+                ax_h.set_xticklabels(list(data["scenario"]), rotation=45, ha="right")
+            else:
+                # Barchart for one RCP
+                sns.barplot(data=data, hue="pnv_class", y=int(bar_plot_col), palette=self.color_palette, ax=ax_h, capsize=.2,
+                            linewidth=1, edgecolor="#04253a", legend=False)
+                ax_h.set_xlabel('')
+                ax_h.set_ylabel('')
+                ax_h.set_xticks(ticks=[])
+            ax_h.set_ylim([0, y_max + (0.10 * y_max)])
+
+            ax_h.tick_params(axis='y', which='major', labelsize=fontsize['ticks'])
+
+            ax_h.patch.set_alpha(0.75)
+            ax_h.set_facecolor('white')
+            ax_h.set_title(title, x=0.15, y=1.05, pad=-14, fontsize=fontsize['title'], fontweight='bold')
+
+        if fig_option == 'pie_chart':
+
+            ax_h.pie(x=data["pnv_share"], colors=sns.color_palette('Accent'),
+                     wedgeprops={"linewidth": 1, "edgecolor": "white", "alpha": 1},
+                     radius=data["rescaled_data"][0])
+            ax_h.patch.set_alpha(0.75)
+            ax_h.set_facecolor('white')
+
+            if data["rescaled_data"][0] > 1.25:
+                x_pos = -0.15
+                y_pos = data["rescaled_data"][0] * 0.8
+            elif data["rescaled_data"][0] < 0.75:
+                x_pos = 0.20
+                y_pos = data["rescaled_data"][0] * 1.3
+            else:
+                x_pos = 0.15
+                y_pos = 1.05
+
+            ax_h.set_title(title, x=x_pos, y=y_pos, pad=-14, fontsize=fontsize['title'],
+                           fontweight='bold')
+
+        return ax_h
+
     def pnv_bar_plot(self, plot_option: str, aggregate_forest: bool):
         """
         Generates a barplot of selected PNV data with different visualization options.
@@ -350,7 +441,7 @@ class PnvDataAnalysis:
 
         if aggregate_forest:
             sns.barplot(data=fig_data, x=x_var, y=self.selected_agg_lvl, hue="scenario", orient="h", ax=ax,
-                        palette="Accent")
+                        palette=self.color_palette)
             if plot_option == "rel":
                 ax.set(ylabel=self.selected_agg_lvl,
                        xlabel=f"Area share of forest-related PNV [%] in {self.selected_year}")
@@ -359,7 +450,7 @@ class PnvDataAnalysis:
                        xlabel=f"Area of forest-related PNV [Tsd ha] in {self.selected_year}")
         else:
             fig_data["y_var"] = fig_data[self.selected_agg_lvl] + "_" + fig_data["scenario"]
-            fig_data.set_index(["y_var"]).plot.barh(stacked=True, color=sns.color_palette("Accent"), ax=ax)
+            fig_data.set_index(["y_var"]).plot.barh(stacked=True, color=sns.color_palette(self.color_palette), ax=ax)
 
             if plot_option == "rel":
                 ax.set(ylabel=self.selected_agg_lvl,
@@ -503,84 +594,6 @@ class PnvDataAnalysis:
             else:
                 lon_lat_dict_new = Coordinates.coord_continents_default_proj.value
 
-        def build_geolocalized_subfig(mapx: float, mapy: float, ax: int, width: float, data: pd.DataFrame, title: str,
-                                      y_max: float, fig_option: str, bar_plot_col: int, fontsize: dict):
-            """
-            Builds sub-figures within a larger map based on user inputs related to the geolocalization.
-            :param mapx: Longitude of the sub-figure's origin.
-            :param mapy: Latitude of the sub-figure's origin.
-            :param ax: Current figure axes.
-            :param width: Width of the sub-figure.
-            :param data: Plotted data in the sub-figure.
-            :param title: Title of the sub-figure.
-            :param y_max: Maximal value of the y-axis.
-            :param fig_option: Chosen figure option by the user.
-            :param bar_plot_col: Year of the data that is plotted.
-            :param fontsize: Font size used for the sub-figure's text.
-            """
-            ax_h = inset_axes(ax, width=width,
-                              height=width,
-                              loc=3,
-                              bbox_to_anchor=(mapx, mapy),
-                              bbox_transform=ax.transData,
-                              borderpad=0,
-                              axes_kwargs={'alpha': 0.35, 'visible': True})
-            if fig_option == 'bar_chart':
-                if len(self.selected_rcp) > 1:
-                    # Barchart for more than one RCP
-                    scenario = tuple(data["scenario"])
-                    pnv_class = {}
-                    for col in data.columns[2:]:
-                        pnv_class[col] = np.array(data[col])
-                    width = 0.5
-                    bottom = np.zeros(len(scenario))
-                    color_runner = 0
-
-                    for boolean, pnv in pnv_class.items():
-                        ax_h.bar(scenario, pnv, width, label=boolean, bottom=bottom,
-                                 color=sns.color_palette("Accent")[color_runner])
-                        bottom = [bottom[x] + pnv[x] for x in range(0, len(scenario))]
-                        color_runner += 1
-                    ax_h.set_xticks(list(data["scenario"]))
-                    ax_h.set_xticklabels(list(data["scenario"]), rotation=45, ha="right")
-                else:
-                    # Barchart for one RCP
-                    sns.barplot(data=data, hue="pnv_class", y=int(bar_plot_col), palette='Accent', ax=ax_h, capsize=.2,
-                                linewidth=1, edgecolor="#04253a", legend=False)
-                    ax_h.set_xlabel('')
-                    ax_h.set_ylabel('')
-                    ax_h.set_xticks(ticks=[])
-                ax_h.set_ylim([0, y_max + (0.10 * y_max)])
-
-                ax_h.tick_params(axis='y', which='major', labelsize=fontsize['ticks'])
-
-                ax_h.patch.set_alpha(0.75)
-                ax_h.set_facecolor('white')
-                ax_h.set_title(title, x=0.15, y=1.05, pad=-14, fontsize=fontsize['title'], fontweight='bold')
-
-            if fig_option == 'pie_chart':
-
-                ax_h.pie(x=data["pnv_share"], colors=sns.color_palette('Accent'),
-                         wedgeprops={"linewidth": 1, "edgecolor": "white", "alpha": 1},
-                         radius=data["rescaled_data"][0])
-                ax_h.patch.set_alpha(0.75)
-                ax_h.set_facecolor('white')
-
-                if data["rescaled_data"][0] > 1.25:
-                    x_pos = -0.15
-                    y_pos = data["rescaled_data"][0] * 0.8
-                elif data["rescaled_data"][0] < 0.75:
-                    x_pos = 0.20
-                    y_pos = data["rescaled_data"][0] * 1.3
-                else:
-                    x_pos = 0.15
-                    y_pos = 1.05
-
-                ax_h.set_title(title, x=x_pos, y=y_pos, pad=-14, fontsize=fontsize['title'],
-                               fontweight='bold')
-
-            return ax_h
-
         y_axis_max = max(fig_data_fore[self.selected_year])
 
         title = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M']
@@ -594,14 +607,14 @@ class PnvDataAnalysis:
 
             lat, lon = lon_lat_dict_new[agg_region][0], lon_lat_dict_new[agg_region][1]
 
-            bax = build_geolocalized_subfig(mapx=lon, mapy=lat, ax=ax, width=0.85, data=region_data,
-                                            bar_plot_col=f"{self.selected_year}", title=region_title, y_max=y_axis_max,
-                                            fig_option=fig_option, fontsize=fontsize)
+            bax = self.build_geolocalized_subfig(mapx=lon, mapy=lat, ax=ax, width=0.85, data=region_data,
+                                                 bar_plot_col=f"{self.selected_year}", title=region_title,
+                                                 y_max=y_axis_max, fig_option=fig_option, fontsize=fontsize)
         # Set legend
         patches = []
         patch_runner = 0
         for pnv_class in fig_data_fore["pnv_class"].unique():
-            patch = mpatches.Patch(color=sns.color_palette(palette='Accent')[patch_runner], label=pnv_class)
+            patch = mpatches.Patch(color=self.color_palette[patch_runner], label=pnv_class)
             patches.append(patch)
             patch_runner += 1
         ax.legend(handles=patches, loc=1, title='PNV classes', title_fontsize=fontsize['title'],
