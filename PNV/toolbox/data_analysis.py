@@ -480,6 +480,13 @@ class PnvDataAnalysis:
 
         ax.set_title(f"{fig_title}_{self.selected_agg_lvl}_{'_'.join(self.selected_rcp)}_{self.selected_year}")
 
+        if self.selected_pnv_classes == 6:
+            ax.legend(loc=1, title='PNV classes', title_fontsize=fontsize['title'], fontsize=fontsize['labels'])
+
+        else:
+            ax.legend(loc=8, title='PNV classes', title_fontsize=fontsize['title'], fontsize=fontsize['labels'],
+                      bbox_to_anchor=(0.5, - 0.22), ncol=3)
+
         if self.save_figures:
             self.logger.info(f"Save barplot")
             plt.savefig(f"{self.output_folder}\\{self.current_dt}_bar_plot_{self.output_name}.png",
@@ -617,8 +624,14 @@ class PnvDataAnalysis:
             patch = mpatches.Patch(color=self.color_palette[patch_runner], label=pnv_class)
             patches.append(patch)
             patch_runner += 1
-        ax.legend(handles=patches, loc=1, title='PNV classes', title_fontsize=fontsize['title'],
-                  fontsize=fontsize['labels'])
+
+        if self.selected_pnv_classes == 6:
+            ax.legend(handles=patches, loc=8, title='PNV classes', title_fontsize=fontsize['title'],
+                      fontsize=fontsize['labels'], bbox_to_anchor=(0.5, - 0.2))
+
+        else:
+            ax.legend(handles=patches, loc=8, title='PNV classes', title_fontsize=fontsize['title'],
+                      fontsize=fontsize['labels'], bbox_to_anchor=(0.5, - 0.3), ncol=3)
         # todo short legend text
         ax.set_title(f"PNV_world_map_{agg_lvl_fore}_{'_'.join(self.selected_rcp)}_{self.selected_year}")
         if self.save_figures:
