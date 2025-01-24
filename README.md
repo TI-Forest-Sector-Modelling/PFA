@@ -155,10 +155,24 @@ The following figure depicts an example of global analyses obtained with 6 class
 Further, the following function parameters were used:
 > pnv_analysis.pnv_world_map(fig_option='bar_chart', winkel_reproject=False, dissolve_map_regions=True)
 
-![img_toolbox_example.png](paper/img_toolbox_example.png)
+![img_toolbox_example.png](paper/img_toolbox_example_worldmap.png)
 **Figure 1**: World map of regional aggregated potential natural vegetation data. The foreground subplots show the distribution
 of forest-related PNV data [10³ ha] in the respective region for the selected RCPs. The background map depicts the potential
 land cover share [%] where forest-related PNV classes could be established in 2050 in the scenario RCP2.6.
+
+Comparisons of aggregated PNV data between single countries, regions or continents can be visualized using bar plots.
+The following figure depicts the share of land where forest-related PVN classes could potentially be established across 
+continental aggregates. Underlying data are processed from 6 classes and 3 RCPs in 2050. 
+
+The following parameters were used:
+> pnv_analysis.pnv_bar_plot(plot_option='rel', aggregated_forest=False)
+
+ 
+![img_toolbox_example_barplot.png](paper/img_toolbox_example_barplot.png)
+**Figure 2**: Barplot of continental aggregated potential natural vegetation data. Aggregated data are depicted as the 
+potential land cover share [%] where forest-related PNV classes could be established in 2050 in the scenario 
+RCP2.6, 4.5, and 8.5.
+
 
 ## Roadmap and project status
 The development of the PFA project is ongoing. Future releases will integrate climate-sensitive projections for agricultural land use.
