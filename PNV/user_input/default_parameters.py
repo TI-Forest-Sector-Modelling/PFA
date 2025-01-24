@@ -13,7 +13,8 @@ Information about TOOLBOX_INPUT:
 'SELECT_YEAR': Selected year for which data will be plotted (selection options: 2013 to 2080) 
 'SELECT_RCP': Selected rcp for which data will be plotted (selection options: ['rcp26', 'rcp45', 'rcp85']) 
 'SELECT_AGG_LVL': Selected aggregation level which will be used for spatial aggregation
-(selection options: ['continents', 'fao_regions', 'country'])
+(selection options: ['continents', 'fao_regions', 'country'], if 'continents' or 'fao_regions' are selected, the option
+ 'SELECT_ISO' will not be considered)
 'SELECT_ISO': Selected country ISO code which data will be plotted
 (selection options: ['any ISO3-list', 'big_n', 'continent name']. 
     - 'any ISO3-list' option shows all countries in the list of ISO3 codes (e.g., ['GER', 'FRA', 'SWE'] 
