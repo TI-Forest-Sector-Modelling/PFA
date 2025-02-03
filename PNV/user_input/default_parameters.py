@@ -1,7 +1,7 @@
 USER_INPUT = {
-    'PROCESS_DATA': False, #False: no preprocessing and transformation of coordinate system; True: transforming
+    'PROCESS_DATA': True, #False: no preprocessing and transformation of coordinate system; True: transforming
     #coordinate system to another
-    'CLASS_SELECTION': 6  # 6 or 20 based on choosing hard classes
+    'CLASS_SELECTION': 6# 6 or 20 based on choosing hard classes
 }
 
 SRC_CRS = 'EPSG:4326'
@@ -32,7 +32,7 @@ TOOLBOX_INPUT = {
     'SELECT_RCP': ['rcp26', 'rcp45', 'rcp85'],
     'SELECT_AGG_LVL': 'country',
     'SELECT_ISO': ['big_10'],
-    'REL_VAL_TOLERANCE': 0.05,
+    'REL_VAL_TOLERANCE': 0.9,
     'PAPER_FORMAT': True,
     'SAVE_FIGURE': True,
     'OUTPUT_NAME': 'test_test_output'
