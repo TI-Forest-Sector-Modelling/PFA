@@ -28,6 +28,7 @@ class ProcessingArea:
         self.logger = get_logger(user_path=None)
         self.time_stamp = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
         self.class_selection = USER_INPUT['CLASS_SELECTION']
+        self.zipped_data = USER_INPUT['ZIPPED_DATA']
 
         if self.class_selection not in [6, 20]:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
@@ -51,14 +52,20 @@ class ProcessingArea:
         """
         data_path = PREPROCESSED_DATA_PATH
         if self.class_selection == 6:
-            pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
+            if self.zipped_data:
+                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
+            else:
+                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.tif')
         elif self.class_selection == 20:
-            pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.zip')
+            if self.zipped_data:
+                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.zip')
+            else:
+                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.tif')
         else:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
 
         all_tif_files = glob.glob(pattern)
-        self.logger.debug(f"Total TIF files found: {len(all_tif_files)}")
+        self.logger.debug(f"Total tif files found: {len(all_tif_files)}")
 
         if self.class_selection == 6:
             return [file for file in all_tif_files if 'iucn' in file.lower()]
@@ -83,10 +90,12 @@ class ProcessingArea:
 
         cmap = mcolors.ListedColormap(colors)
 
-        folder_name = os.path.normpath(tif_file)
-        folder_name = folder_name.split(os.sep)[-1]
-
-        tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        if self.zipped_data:
+            folder_name = os.path.normpath(tif_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        else:
+            tif_file = os.path.abspath(tif_file)
 
         with rasterio.open(tif_file) as src:
             img = src.read(1)
@@ -114,15 +123,18 @@ class ProcessingArea:
         :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
         returns: Total area in km².
         """
-        folder_name = os.path.normpath(tif_file)
-        folder_name = folder_name.split(os.sep)[-1]
-        tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        if self.zipped_data:
+            folder_name = os.path.normpath(tif_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        else:
+            tif_file = os.path.abspath(tif_file)
 
         with rasterio.open(tif_file) as src:
             resolution = src.res[0]
             width = src.width
             height = src.height
-            total_area_km2 = width * height
+            total_area_km2 = width * height * (resolution ** 2) / 1e6
             self.logger.info(f"Total area (km^2): {total_area_km2}")
             return total_area_km2
 
@@ -142,32 +154,41 @@ class ProcessingArea:
         else:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
 
-        folder_name = os.path.normpath(tif_file)
-        folder_name = folder_name.split(os.sep)[-1]
-        tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        if self.zipped_data:
+            folder_name = os.path.normpath(tif_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        else:
+            tif_file = os.path.abspath(tif_file)
 
         with rasterio.open(tif_file) as src:
+            resolution = src.res
+            pixel_area_km2 = (resolution[0] * resolution[1]) / 1e6
             img = src.read(1)
-            results_df = pd.DataFrame(columns=['value', 'class name', 'pixel count', 'percentage (include 0)',
-                                               'percentage (exclude 0)'])
             total_pixels = np.prod(img.shape)
+            total_area_km2 = total_pixels * pixel_area_km2
+
+            results = []
 
             for value in range(len(colors)):
                 pixel_count = np.count_nonzero(img == value)
+                class_area_km2 = pixel_count * pixel_area_km2
+
                 percentage_include_0 = (pixel_count / total_pixels) * 100
+                percentage_exclude_0 = (
+                    (pixel_count / np.count_nonzero(img != 0)) * 100 if value != 0 else 0
+                )
 
-                if value == 0:
-                    percentage_exclude_0 = 0
-                else:
-                    percentage_exclude_0 = (pixel_count / np.count_nonzero(img != 0)) * 100
+                results.append({
+                    'Value': value,
+                    'Class Name': labels[value],
+                    'Pixel Count': pixel_count,
+                    'Class Area (km²)': class_area_km2,
+                    'Percentage (include 0)': percentage_include_0,
+                    'Percentage (exclude 0)': percentage_exclude_0
+                })
 
-                results_df = pd.concat([results_df, pd.DataFrame({
-                    'Value': [value],
-                    'Class Name': [labels[value]],
-                    'Pixel Count': [pixel_count],
-                    'percentage (include 0)': [percentage_include_0],
-                    'percentage (exclude 0)': [percentage_exclude_0]
-                })], ignore_index=True)
+            results_df = pd.DataFrame(results)
 
             return results_df
 
@@ -191,31 +212,29 @@ class ProcessingArea:
         world['geometry'] = world['geometry'].simplify(tolerance=0.1)
         pixel_counts_df = pd.DataFrame(columns=['country', 'ISO'] + labels + ['Total Pixels', 'Total Area (km^2)'])
 
-        folder_name = os.path.normpath(raster_file)
-        folder_name = folder_name.split(os.sep)[-1]
-        raster_file = f"zip+file://{raster_file}!{folder_name[:-3]}tif"
+        if self.zipped_data:
+            folder_name = os.path.normpath(raster_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            raster_file = f"zip+file://{raster_file}!{folder_name[:-3]}tif"
+        else:
+            raster_file = os.path.abspath(raster_file)
 
         with rasterio.open(raster_file) as src:
-            img = src.read(1)
-            transform = src.transform
-            total_pixels = img.size
+            resolution = src.res
+            pixel_area_km2 = (resolution[0] * resolution[1]) / 1e6
 
-            if log_enabled and self.logger:
-                self.logger.info(f"Total pixels: {total_pixels}")
+            img = src.read(1)
+            total_pixels = img.size
+            total_area_km2 = total_pixels * pixel_area_km2
 
             for index, country in world.iterrows():
                 geometry = [mapping(country['geometry'])]
                 iso_code = country['iso_a3']
 
-                if log_enabled and self.logger:
-                    self.logger.info(f"Processing country: {country['name']} (ISO code: {iso_code})")
-
                 try:
                     out_image, out_transform = mask(src, geometry, crop=True, nodata=0)
                     masked_img = out_image[0]
                     if masked_img.size == 0:
-                        if log_enabled and self.logger:
-                            self.logger.info(f"Country {country['name']} has no intersecting pixels.")
                         continue
 
                     masked_img = np.ma.masked_equal(masked_img, 0)
@@ -223,14 +242,11 @@ class ProcessingArea:
                     unique, counts = np.unique(masked_img.compressed(), return_counts=True)
                     pixel_count_dict = dict(zip(unique, counts))
 
-                    if log_enabled and self.logger:
-                        self.logger.info(f"Country: {country['name']}, class: {pixel_count_dict}")
-
                     row_data = {'country': country['name'], 'ISO': iso_code}
                     total_area = 0
                     for i, label in enumerate(labels):
                         pixel_count = pixel_count_dict.get(i, 0)
-                        area = pixel_count
+                        area = pixel_count * pixel_area_km2
                         row_data[label] = area
                         total_area += area
 

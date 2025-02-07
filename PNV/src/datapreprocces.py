@@ -41,14 +41,19 @@ def zip_epsg_reproject(output_tif: str):
     Transforms reprojected tif files into zip files. Deletes tif files after transformation.
     :param output_tif: Reprojected tif files.
     """
+
+    if not os.path.exists(output_tif):
+        print(f"File {output_tif} does not exist, skipping zipping.")
+        return
+
     output_tif = output_tif[:-4]
     output_zip = output_tif.split('\\')[-1]
     zipfile.ZipFile(f'{output_tif}.zip', 'w', zipfile.ZIP_DEFLATED).write(f'{output_tif}.tif', arcname=f'{output_zip}.tif')
 
-    try:
-        os.remove(f"{output_tif}.tif")
-    except PermissionError:
-        pass
+    #try:
+    #    os.remove(f"{output_tif}.tif")
+    #except PermissionError:
+    #    pass
 
 
 def process_all_files(input_dir: str, output_dir: str, src_crs: str, dst_crs: str):
@@ -66,16 +71,22 @@ def process_all_files(input_dir: str, output_dir: str, src_crs: str, dst_crs: st
     if not os.path.exists(input_dir):
         print(f"Input directory {input_dir} does not exist.")
         return
-    for filename in tqdm(os.listdir(input_dir), desc="Processing TIFF raw files"):
-        if filename.endswith(".tif"):
-            input_path = os.path.join(input_dir, filename)
-            output_filename = filename.replace('4326', '8857')
-            output_path = os.path.join(output_dir, output_filename)
 
-            if os.path.exists(output_path):
-                print(f"File {output_path} already exists, skipping.")
-                continue
+    all_files = [
+        filename for filename in os.listdir(input_dir)
+        if filename.lower().endswith(".tif") and os.path.isfile(os.path.join(input_dir, filename))
+    ]
+    print(f"Total .tif files to process: {len(all_files)}")
 
-            epsg_reproject(input_path, output_path, src_crs, dst_crs)
-            zip_epsg_reproject(output_path)
+    for filename in tqdm(all_files, desc="Processing .tif raw files"):
+        input_path = os.path.join(input_dir, filename)
+        output_filename = filename.replace('4326', '8857')
+        output_path = os.path.join(output_dir, output_filename)
+
+        if os.path.exists(output_path):
+            print(f"File {output_path} already exists, skipping.")
+            continue
+
+        epsg_reproject(input_path, output_path, src_crs, dst_crs)
+        zip_epsg_reproject(output_path)
 
