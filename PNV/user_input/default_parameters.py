@@ -1,7 +1,8 @@
 USER_INPUT = {
-    'PROCESS_DATA': True, #False: no preprocessing and transformation of coordinate system; True: transforming
-    #coordinate system to another
-    'CLASS_SELECTION': 6# 6 or 20 based on choosing hard classes
+    'PROCESS_DATA': False,  # False: no preprocessing and transformation of coordinate system; True: transforming
+    # coordinate system to another
+    'CLASS_SELECTION': 20,  # 6 or 20 based on choosing hard classes
+    'ZIPPED_DATA': True
 }
 
 SRC_CRS = 'EPSG:4326'

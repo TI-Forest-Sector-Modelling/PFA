@@ -28,6 +28,7 @@ class ProcessingArea:
         self.logger = get_logger(user_path=None)
         self.time_stamp = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
         self.class_selection = USER_INPUT['CLASS_SELECTION']
+        self.zipped_data = USER_INPUT['ZIPPED_DATA']
 
         if self.class_selection not in [6, 20]:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
@@ -51,11 +52,15 @@ class ProcessingArea:
         """
         data_path = PREPROCESSED_DATA_PATH
         if self.class_selection == 6:
-            #pattern = os.path.join(data_path, 'biomes_iucn.hcl*.tif')
-            pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
+            if self.zipped_data:
+                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
+            else:
+                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.tif')
         elif self.class_selection == 20:
-            #pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.tif')
-            pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.zip')
+            if self.zipped_data:
+                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.zip')
+            else:
+                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.tif')
         else:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
 
@@ -85,11 +90,12 @@ class ProcessingArea:
 
         cmap = mcolors.ListedColormap(colors)
 
-        folder_name = os.path.normpath(tif_file)
-        folder_name = folder_name.split(os.sep)[-1]
-
-        tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
-        #tif_file = os.path.abspath(tif_file)
+        if self.zipped_data:
+            folder_name = os.path.normpath(tif_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        else:
+            tif_file = os.path.abspath(tif_file)
 
         with rasterio.open(tif_file) as src:
             img = src.read(1)
@@ -117,10 +123,12 @@ class ProcessingArea:
         :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
         returns: Total area in km².
         """
-        folder_name = os.path.normpath(tif_file)
-        #folder_name = folder_name.split(os.sep)[-1]
-        tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
-        #tif_file = os.path.abspath(tif_file)
+        if self.zipped_data:
+            folder_name = os.path.normpath(tif_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        else:
+            tif_file = os.path.abspath(tif_file)
 
         with rasterio.open(tif_file) as src:
             resolution = src.res[0]
@@ -146,10 +154,12 @@ class ProcessingArea:
         else:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
 
-        folder_name = os.path.normpath(tif_file)
-        folder_name = folder_name.split(os.sep)[-1]
-        tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
-        #tif_file = os.path.abspath(tif_file)
+        if self.zipped_data:
+            folder_name = os.path.normpath(tif_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+        else:
+            tif_file = os.path.abspath(tif_file)
 
         with rasterio.open(tif_file) as src:
             resolution = src.res
@@ -202,9 +212,12 @@ class ProcessingArea:
         world['geometry'] = world['geometry'].simplify(tolerance=0.1)
         pixel_counts_df = pd.DataFrame(columns=['country', 'ISO'] + labels + ['Total Pixels', 'Total Area (km^2)'])
 
-        folder_name = os.path.normpath(raster_file)
-        folder_name = folder_name.split(os.sep)[-1]
-        raster_file = f"zip+file://{raster_file}!{folder_name[:-3]}tif"
+        if self.zipped_data:
+            folder_name = os.path.normpath(raster_file)
+            folder_name = folder_name.split(os.sep)[-1]
+            raster_file = f"zip+file://{raster_file}!{folder_name[:-3]}tif"
+        else:
+            raster_file = os.path.abspath(raster_file)
 
         with rasterio.open(raster_file) as src:
             resolution = src.res
