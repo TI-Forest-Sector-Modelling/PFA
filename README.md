@@ -161,16 +161,16 @@ of forest-related PNV data [10³ ha] in the respective region for the selected R
 land cover share [%] where forest-related PNV classes could be established in 2050 in the scenario RCP2.6.
 
 Comparisons of aggregated PNV data between single countries, regions or continents can be visualized using bar plots.
-The following figure depicts the share of land where forest-related PVN classes could potentially be established across 
-continental aggregates. Underlying data are processed from 6 classes and 3 RCPs in 2050. 
+The following figure depicts the share of land where forest-related PNV classes could potentially be established across 
+the 10 most forested countries gobally. Underlying data are processed from 20 classes and 3 RCPs in 2050. 
 
 The following parameters were used:
 > pnv_analysis.pnv_bar_plot(plot_option='rel', aggregated_forest=False)
 
  
 ![img_toolbox_example_barplot.png](paper/img_toolbox_example_barplot.png)
-**Figure 2**: Barplot of continental aggregated potential natural vegetation data. Aggregated data are depicted as the 
-potential land cover share [%] where forest-related PNV classes could be established in 2050 in the scenario 
+**Figure 2**: Bar plot of PNV data for the 10 most forested countries. The data are depicted as 
+the potential land cover share [%] where forest-related PNV classes could be established in 2050 in the scenario 
 RCP2.6, 4.5, and 8.5.
 
 
