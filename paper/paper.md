@@ -66,7 +66,7 @@ across climate scenarios and time periods.
 # Examples
 The toolbox provides a built-in solution for rapid analyses, providing an overview of the data in the geographical resolution of interest.
 The toolbox allows to conduct national, regional, or global analyses of processed remote sensing data and visualise the result: 
-- The provided barplot option is designed for national, regional, or global analyses.
+- The provided bar plot option is designed for national, regional, or global analyses.
 - The provided world map option enables users to conduct global analyses.
 
 The toolbox can be started from the main entry point (plot_fig=True) or the data_analysis.py. However, the second
@@ -82,8 +82,8 @@ Further, the following function parameters were used:
 of forest-related PNV data [10³ ha] in the respective region for the selected RCPs. The background map depicts the potential land cover share [%] where forest-related PNV classes could be established.
 
 Comparisons of aggregated PNV data between single countries, regions or continents can be visualized using bar plots.
-The following figure depicts the share of land where forest-related PVN classes could potentially be established across 
-continental aggregates. Underlying data are processed from 6 classes and 3 RCPs in 2050. 
+The following figure depicts the share of land where forest-related PNV classes could potentially be established across 
+the 10 most forested countries gobally. Underlying data are processed from 20 classes and 3 RCPs in 2050. 
 
 The following parameters were used:
 > pnv_analysis.pnv_bar_plot(plot_option='rel', aggregated_forest=False)
@@ -91,8 +91,8 @@ The following parameters were used:
  
 ![img_toolbox_example_barplot.png](img_toolbox_example_barplot.png)
 
-**Figure 3**: Barplot of continental aggregated potential natural vegetation data. Aggregated data are depicted as the 
-potential land cover share [%] where forest-related PNV classes could be established in 2050 in the scenario 
+**Figure 3**: Bar plot of PNV data for the 10 most forested countries. The data are depicted as 
+the potential land cover share [%] where forest-related PNV classes could be established in 2050 in the scenario 
 RCP2.6, 4.5, and 8.5.
 
 # Acknowledgements
