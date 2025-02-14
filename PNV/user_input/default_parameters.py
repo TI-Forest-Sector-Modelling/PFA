@@ -33,7 +33,7 @@ TOOLBOX_INPUT = {
     'SELECT_RCP': ['rcp26', 'rcp45', 'rcp85'],
     'SELECT_AGG_LVL': 'country',
     'SELECT_ISO': ['big_10'],
-    'REL_VAL_TOLERANCE': 0.9,
+    'REL_VAL_TOLERANCE': 0.3,
     'PAPER_FORMAT': True,
     'SAVE_FIGURE': True,
     'OUTPUT_NAME': 'test_test_output'

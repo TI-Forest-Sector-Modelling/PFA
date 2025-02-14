@@ -80,7 +80,7 @@ or
 
 
 To reduce the test suite running time, only the data for 6 classes are tested. The test suite results will not be saved.
-The aggregated data are validated using the WDI land surface comparing both land surface data with a relative tolerance of 5%.  
+The aggregated data are validated using the WDI land surface comparing both land surface data with a relative tolerance of 30%.  
 
 The coverage report of the PFA project can be accessed using:
  > coverage report

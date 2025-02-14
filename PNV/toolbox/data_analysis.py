@@ -217,6 +217,7 @@ class PnvDataAnalysis:
             for year in [2013, 2040, 2080]:
                 data_to_validate_year = data_to_validate[["ISO", "scenario", "pnv_class", year]]
                 data_to_validate_year = data_to_validate_year.groupby(["ISO", "scenario"])[year].sum().reset_index()
+                data_to_validate_year[year] = data_to_validate_year[year] * 10  # Conversion tsd_ha to km²
                 data_to_validate_year = data_to_validate_year.merge(validation_data, left_on="ISO", right_on="ISO",
                                                                     how="left")
                 data_to_validate_year = data_to_validate_year.dropna(axis=0, how="any").reset_index(drop=True)
