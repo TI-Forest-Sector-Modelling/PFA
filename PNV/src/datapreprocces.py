@@ -48,12 +48,14 @@ def zip_epsg_reproject(output_tif: str):
 
     output_tif = output_tif[:-4]
     output_zip = output_tif.split('\\')[-1]
-    zipfile.ZipFile(f'{output_tif}.zip', 'w', zipfile.ZIP_DEFLATED).write(f'{output_tif}.tif', arcname=f'{output_zip}.tif')
+    zipfile.ZipFile(
+        f'{output_tif}.zip', 'w', zipfile.ZIP_DEFLATED).write(f'{output_tif}.tif',
+                                                              arcname=f'{output_zip}.tif')
 
-    #try:
-    #    os.remove(f"{output_tif}.tif")
-    #except PermissionError:
-    #    pass
+    try:
+        os.remove(f"{output_tif}.tif")
+    except PermissionError:
+        pass
 
 
 def process_all_files(input_dir: str, output_dir: str, src_crs: str, dst_crs: str):
