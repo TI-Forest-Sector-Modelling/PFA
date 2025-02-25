@@ -13,7 +13,7 @@ from shapely.geometry import mapping
 from tqdm import tqdm
 
 from PNV.src.datamanager import colors_6, labels_6, colors_20, labels_20
-from PNV.src.datapreprocces import process_all_files
+from PNV.src.datapreprocces import (process_all_files, reproject_and_save, merge_with_windowing)
 from PNV.user_input.default_parameters import USER_INPUT, TOOLBOX_INPUT, SRC_CRS, DST_CRS
 from PNV.src.base_logger import get_logger
 from PNV.paths.paths import INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, OUTPUT_PATH
@@ -29,6 +29,7 @@ class ProcessingArea:
         self.time_stamp = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
         self.class_selection = USER_INPUT['CLASS_SELECTION']
         self.zipped_data = USER_INPUT['ZIPPED_DATA']
+        self.merge_data = USER_INPUT['MERGE_AGRI_DATA']
 
         if self.class_selection not in [6, 20]:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
@@ -38,16 +39,22 @@ class ProcessingArea:
             self.logger.info(f"Processing data...")
             process_all_files(INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, SRC_CRS, DST_CRS)
             self.logger.info(f"Data processing complete.")
+        if self.merge_data:
+            self.logger.info(f"Merging PNV and other land use data...")
+            self.readin_agri_data()
+            self.merge_agri_data()
+            self.logger.info(f"Data merging complete.")
 
-        self.tif_files = self.filter_tif_files_by_selection()
+        self.tif_files = self.filter_tif_files_by_selection(merged_agri_data=self.merge_data)
         self.logger.info(f"Found {len(self.tif_files)} relevant TIF files for class selection {self.class_selection}.")
 
         combined_df = self.process_files(self.tif_files, OUTPUT_PATH)
         self.save_results(combined_df)
 
-    def filter_tif_files_by_selection(self):
+    def filter_tif_files_by_selection(self, merged_agri_data: bool):
         """
         Filters the TIF files to match the selected class based on class_selection.
+        :param merged_agri_data: Flag to control if merged data are selected (True) or not (False).
         :return: List of filtered TIF files relevant to the selected class.
         """
         data_path = PREPROCESSED_DATA_PATH
@@ -68,10 +75,16 @@ class ProcessingArea:
         self.logger.debug(f"Total tif files found: {len(all_tif_files)}")
 
         if self.class_selection == 6:
-            return [file for file in all_tif_files if 'iucn' in file.lower()]
+            file_list = [file for file in all_tif_files if 'iucn' in file.lower()]
         elif self.class_selection == 20:
-            return [file for file in all_tif_files if 'biome6k' in file.lower()]
-        return []
+            file_list = [file for file in all_tif_files if 'biome6k' in file.lower()]
+
+        if merged_agri_data:
+            file_list = [file for file in file_list if 'merged' in file.lower()]
+        else:
+            file_list = [file for file in file_list if 'merged' not in file.lower()]
+
+        return file_list
 
     def plot_tif(self, tif_file: str, output_path: str):
         """
@@ -325,4 +338,45 @@ class ProcessingArea:
 
         self.logger.info(f"Results saved to Excel and pickle files in {OUTPUT_PATH}")
 
+    def readin_agri_data(self):
+        """
+        Reads in the global land use dataset HILDA+ containing agricultural and urban land use data. The HILDA-dataset
+        is reprojected to match PNV from Bonanella
+        """
+        self.logger.info(f"Merge forest and agricultural area data")
+        agri_data_file = 'hilda_plus_2015_states_GLOB-v1-0_base-map_wgs84-nn.tif'
+        new_agri_data_file = 'hilda_plus_2015_epsg8857.tif'
+        input_path = os.path.join(INPUT_RAW_DATA_PATH, agri_data_file)
+        output_path = os.path.join(OUTPUT_PATH, new_agri_data_file)
+        data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
+
+        reproject_and_save(src_raster_path=input_path,
+                           output_path=output_path,
+                           forest_raster_path=data_list[0],
+                           zipped_data=self.zipped_data,
+                           logger=self.logger)
+
+    def merge_agri_data(self):
+        """
+        Merges forest data from Bonanella with HILDA+ land use data.
+        """
+        self.logger.info(f"Merge forest and agricultural area data")
+        data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
+        new_agri_data_file = 'hilda_plus_2015_epsg8857.tif'
+        agri_raster_path = os.path.join(OUTPUT_PATH, new_agri_data_file)
+        for src_data in tqdm(data_list, desc="Merging TIFF files"):
+            if self.zipped_data:
+                folder_name = src_data.split(os.sep)[-1]
+                src_data_merged = f"{folder_name[:-4]}_merged.tif"
+                src_data_merged_zip = f"{folder_name[:-4]}_merged.zip"
+                src_data_merged = os.path.join(PREPROCESSED_DATA_PATH, src_data_merged)
+                src_data_merged_zip = os.path.join(PREPROCESSED_DATA_PATH, src_data_merged_zip)
+                src_data = f"zip+file://{src_data}!{folder_name[:-3]}tif"
+
+            if not os.path.isfile(src_data_merged_zip):
+                merge_with_windowing(forest_raster_path=src_data,
+                                     agri_raster_path=agri_raster_path,
+                                     merged_raster_path=src_data_merged,
+                                     zipped_data=self.zipped_data,
+                                     selected_pnv_classes=self.class_selection)
 

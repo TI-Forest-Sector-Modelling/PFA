@@ -249,8 +249,10 @@ class PnvDataAnalysis:
         self.logger.info(f"Filter forest-related classes from NVP data")
         if self.selected_pnv_classes == 6:
             forest_classes = PotentialNaturalVegetationArea.forest_classes_6.value
+            forest_classes = list(forest_classes.values())
         if self.selected_pnv_classes == 20:
             forest_classes = PotentialNaturalVegetationArea.forest_classes_20.value
+            forest_classes = list(forest_classes.values())
 
         for key in self.pnv_data_dict.keys():
             tmp_data = self.pnv_data_dict[key].copy()

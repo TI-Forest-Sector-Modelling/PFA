@@ -2,7 +2,8 @@ USER_INPUT = {
     'PROCESS_DATA': False,  # False: no preprocessing and transformation of coordinate system; True: transforming
     # coordinate system to another
     'CLASS_SELECTION': 20,  # 6 or 20 based on choosing hard classes
-    'ZIPPED_DATA': True
+    'ZIPPED_DATA': True,
+    'MERGE_AGRI_DATA': True
 }
 
 SRC_CRS = 'EPSG:4326'
@@ -28,7 +29,7 @@ Information about TOOLBOX_INPUT:
 """
 
 TOOLBOX_INPUT = {
-    'SELECT_PNV_CLASS': 6,
+    'SELECT_PNV_CLASS': 20,
     'SELECT_YEAR': 2050,
     'SELECT_RCP': ['rcp26', 'rcp45', 'rcp85'],
     'SELECT_AGG_LVL': 'country',
