@@ -2,6 +2,8 @@ USER_INPUT = {
     'PROCESS_DATA': False,  # False: no preprocessing and transformation of coordinate system; True: transforming
     # coordinate system to another
     'CLASS_SELECTION': 20,  # 6 or 20 based on choosing hard classes
+    'PLOT_MAPS': False,
+    'PLOT_DOWNSCALE_FACTOR': 4,  # Factor to downscale plotted world maps (no downscale == 1)
     'ZIPPED_DATA': True,
     'MERGE_AGRI_DATA': True
 }
