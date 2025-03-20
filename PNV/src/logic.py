@@ -225,7 +225,7 @@ class ProcessingArea:
 
             return results_df
 
-    def get_pixel_values_by_country(self, raster_file: pd.DataFrame, log_enabled=False):
+    def get_pixel_values_by_country(self, raster_file: pd.DataFrame):
         """
         Calculates the pixels of the TIFF files for each category of vegetation area and each country on a global
         level.
@@ -255,10 +255,6 @@ class ProcessingArea:
         with rasterio.open(raster_file) as src:
             resolution = src.res
             pixel_area_km2 = (resolution[0] * resolution[1]) / 1e6
-
-            img = src.read(1)
-            total_pixels = img.size
-            total_area_km2 = total_pixels * pixel_area_km2
 
             for index, country in world.iterrows():
                 geometry = [mapping(country['geometry'])]
