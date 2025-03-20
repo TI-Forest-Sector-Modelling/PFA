@@ -110,15 +110,35 @@ class ProcessingArea:
         else:
             tif_file = os.path.abspath(tif_file)
 
+        window_size = 512
+        downscale_factor = USER_INPUT['PLOT_DOWNSCALE_FACTOR']
         with rasterio.open(tif_file) as src:
-            img = src.read(1)
-            unique_values = np.unique(img)
+            height, width = src.height, src.width
+            img_full = np.zeros((height, width), dtype=src.dtypes[0])
+            unique_values_set = set()
 
+            for row in range(0, height, window_size):
+                for col in range(0, width, window_size):
+                    w = min(window_size, width - col)
+                    h = min(window_size, height - row)
+                    window = rasterio.windows.Window(col, row, w, h)
+                    img_full[row:row + h, col:col + w] = src.read(1, window=window)
+                    unique_values_set.update(np.unique(src.read(1, window=window)))
+
+            unique_values = np.array(sorted(unique_values_set))
+            unique_values = unique_values[~np.isnan(unique_values)]
             if len(unique_values) > len(colors):
                 raise ValueError(f"The image has more than {len(colors)} classes.")
 
+            new_height, new_width = height // downscale_factor, width // downscale_factor
+            img_downscaled = src.read(
+                1,
+                out_shape=(1, new_height, new_width),
+                resampling=rasterio.enums.Resampling.nearest
+            )
+
             plt.figure(figsize=(14, 10))
-            plt.imshow(img, cmap=cmap, interpolation='nearest')
+            plt.imshow(img_downscaled, cmap=cmap, interpolation='nearest')
             cbar = plt.colorbar(ticks=range(len(colors)))
             cbar.ax.set_yticklabels(labels)
             cbar.ax.yaxis.set_tick_params(labelsize=10)
@@ -287,8 +307,9 @@ class ProcessingArea:
 
             self.logger.info(f"Processing {tif_file_path} with sheet name {sheet_name}")
 
-            plot_path = os.path.join(output_dir, f"{sheet_name}.png")
-            self.plot_tif(tif_file_path, plot_path)
+            if USER_INPUT['PLOT_MAPS']:
+                plot_path = os.path.join(output_dir, f"{sheet_name}.png")
+                self.plot_tif(tif_file_path, plot_path)
 
             area = self.calculate_area(tif_file_path)
             self.logger.info(f"Calculated area for {tif_file_path}: {area} km^2")
