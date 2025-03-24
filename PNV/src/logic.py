@@ -304,7 +304,11 @@ class ProcessingArea:
             self.logger.info(f"Processing {tif_file_path} with sheet name {sheet_name}")
 
             if USER_INPUT['PLOT_MAPS']:
-                plot_path = os.path.join(output_dir, f"{sheet_name}.png")
+                if self.merge_data:
+                    plot_name = f"{sheet_name}_merged.png"
+                else:
+                    plot_name = f"{sheet_name}.png"
+                plot_path = os.path.join(output_dir, plot_name)
                 self.plot_tif(tif_file_path, plot_path)
 
             area = self.calculate_area(tif_file_path)
@@ -339,19 +343,25 @@ class ProcessingArea:
         """
 
         class_selection = self.class_selection
+
+        if self.merge_data:
+            filename_diff_sheets = f'{self.time_stamp}_{class_selection}_class_different_sheets_merged'
+            filename_combined = f'{self.time_stamp}_{class_selection}_class_combined_merged'
+        else:
+            filename_diff_sheets = f'{self.time_stamp}_{class_selection}_class_different_sheets'
+            filename_combined = f'{self.time_stamp}_{class_selection}_class_combined'
+
         with pd.ExcelWriter(
-                os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_different_sheets.xlsx'),
-                engine='xlsxwriter') as writer:
+                os.path.join(OUTPUT_PATH, f'{filename_diff_sheets}.xlsx'), engine='xlsxwriter') as writer:
             for sheet_name in combined_df['Sheet Name'].unique():
                 df_sheet = combined_df[combined_df['Sheet Name'] == sheet_name]
                 df_sheet.to_excel(writer, sheet_name=sheet_name[:31], index=False)
 
         with pd.ExcelWriter(
-                os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_combined.xlsx'),
-                engine='xlsxwriter') as writer:
+                os.path.join(OUTPUT_PATH, f'{filename_combined}.xlsx'), engine='xlsxwriter') as writer:
             combined_df.to_excel(writer, sheet_name='Results', index=False)
 
-        combined_df.to_pickle(os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_combined.pkl'))
+        combined_df.to_pickle(os.path.join(OUTPUT_PATH, f'{filename_combined}.pkl'))
 
         self.logger.info(f"Results saved to Excel and pickle files in {OUTPUT_PATH}")
 
