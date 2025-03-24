@@ -32,6 +32,7 @@ Information about TOOLBOX_INPUT:
 
 TOOLBOX_INPUT = {
     'SELECT_PNV_CLASS': 20,
+    'MERGE_AGRI_DATA': True,
     'SELECT_YEAR': 2050,
     'SELECT_RCP': ['rcp26', 'rcp45', 'rcp85'],
     'SELECT_AGG_LVL': 'country',
