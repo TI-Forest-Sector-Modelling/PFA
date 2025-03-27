@@ -7,6 +7,7 @@ import os
 import glob
 import pandas as pd
 import datetime as dt
+import zipfile
 
 from rasterio.mask import mask
 from shapely.geometry import mapping
@@ -86,6 +87,13 @@ class ProcessingArea:
 
         return file_list
 
+    def extract_tif_from_zip(self, zip_path):
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            for file in zip_ref.namelist():
+                if file.endswith(".tif"):
+                    return file
+        raise FileNotFoundError(f'No tif file in {zip_path} found')
+
     def plot_tif(self, tif_file: str, output_path: str):
         """
         Transforms a TIFF file into a PNG format and saves it to the specified output path.
@@ -104,9 +112,12 @@ class ProcessingArea:
         cmap = mcolors.ListedColormap(colors)
 
         if self.zipped_data:
-            folder_name = os.path.normpath(tif_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(tif_file)
+
+            if os.name == "nt": #windows
+                tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
+            else: #macOS/Linux
+                tif_file = f"/vsizip/{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -127,6 +138,7 @@ class ProcessingArea:
 
             unique_values = np.array(sorted(unique_values_set))
             unique_values = unique_values[~np.isnan(unique_values)]
+            
             if len(unique_values) > len(colors):
                 raise ValueError(f"The image has more than {len(colors)} classes.")
 
@@ -157,9 +169,12 @@ class ProcessingArea:
         returns: Total area in km².
         """
         if self.zipped_data:
-            folder_name = os.path.normpath(tif_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(tif_file)
+
+            if os.name == "nt":  # windows
+                tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
+            else:  # macOS/Linux
+                tif_file = f"/vsizip/{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -188,9 +203,12 @@ class ProcessingArea:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
 
         if self.zipped_data:
-            folder_name = os.path.normpath(tif_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(tif_file)
+
+            if os.name == "nt":  # windows
+                tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
+            else:  # macOS/Linux
+                tif_file = f"/vsizip/{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -246,9 +264,12 @@ class ProcessingArea:
         pixel_counts_df = pd.DataFrame(columns=['country', 'ISO'] + labels + ['Total Pixels', 'Total Area (km^2)'])
 
         if self.zipped_data:
-            folder_name = os.path.normpath(raster_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            raster_file = f"zip+file://{raster_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(raster_file)
+
+            if os.name == "nt":  # windows
+                raster_file = f"zip+file://{raster_file}!{tif_inside_zip}"
+            else:  # macOS/Linux
+                raster_file = f"/vsizip/{raster_file}/{tif_inside_zip}"
         else:
             raster_file = os.path.abspath(raster_file)
 
