@@ -262,12 +262,11 @@ def merge_with_windowing(forest_raster_path, agri_raster_path, merged_raster_pat
 
                         other_land_use_mask = create_dynamic_mask(land_use_data=agri_chunk,
                                                                   land_use_classes=filter_other_land_use_class,
-                                                                  include_exclude='exclude')
+                                                                  include_exclude='include')
 
-                        forest_not_in_agriculture_and_urban = forest_mask & other_land_use_mask
-
-                        remaining_forest_area = np.where(forest_not_in_agriculture_and_urban, forest_chunk, np.nan)
-
+                        forest_not_in_agriculture_and_urban = np.logical_and(forest_mask == 1, other_land_use_mask == 0)
+                        forest_not_in_agriculture_and_urban = forest_not_in_agriculture_and_urban.astype(int)
+                        remaining_forest_area = forest_not_in_agriculture_and_urban * forest_chunk
                         output_raster.write(remaining_forest_area, 1, window=window)
 
     if zipped_data:

@@ -121,16 +121,36 @@ class ProcessingArea:
         else:
             tif_file = os.path.abspath(tif_file)
 
+        window_size = 512
+        downscale_factor = USER_INPUT['PLOT_DOWNSCALE_FACTOR']
         with rasterio.open(tif_file) as src:
-            img = src.read(1)
-            unique_values = np.unique(img)
+            height, width = src.height, src.width
+            img_full = np.zeros((height, width), dtype=src.dtypes[0])
+            unique_values_set = set()
 
+            for row in range(0, height, window_size):
+                for col in range(0, width, window_size):
+                    w = min(window_size, width - col)
+                    h = min(window_size, height - row)
+                    window = rasterio.windows.Window(col, row, w, h)
+                    img_full[row:row + h, col:col + w] = src.read(1, window=window)
+                    unique_values_set.update(np.unique(src.read(1, window=window)))
 
+            unique_values = np.array(sorted(unique_values_set))
+            unique_values = unique_values[~np.isnan(unique_values)]
+            
             if len(unique_values) > len(colors):
                 raise ValueError(f"The image has more than {len(colors)} classes.")
 
+            new_height, new_width = height // downscale_factor, width // downscale_factor
+            img_downscaled = src.read(
+                1,
+                out_shape=(1, new_height, new_width),
+                resampling=rasterio.enums.Resampling.nearest
+            )
+
             plt.figure(figsize=(14, 10))
-            plt.imshow(img, cmap=cmap, interpolation='nearest')
+            plt.imshow(img_downscaled, cmap=cmap, interpolation='nearest')
             cbar = plt.colorbar(ticks=range(len(colors)))
             cbar.ax.set_yticklabels(labels)
             cbar.ax.yaxis.set_tick_params(labelsize=10)
@@ -223,7 +243,7 @@ class ProcessingArea:
 
             return results_df
 
-    def get_pixel_values_by_country(self, raster_file: pd.DataFrame, log_enabled=False):
+    def get_pixel_values_by_country(self, raster_file: pd.DataFrame):
         """
         Calculates the pixels of the TIFF files for each category of vegetation area and each country on a global
         level.
@@ -256,10 +276,6 @@ class ProcessingArea:
         with rasterio.open(raster_file) as src:
             resolution = src.res
             pixel_area_km2 = (resolution[0] * resolution[1]) / 1e6
-
-            img = src.read(1)
-            total_pixels = img.size
-            total_area_km2 = total_pixels * pixel_area_km2
 
             for index, country in world.iterrows():
                 geometry = [mapping(country['geometry'])]
@@ -308,8 +324,13 @@ class ProcessingArea:
 
             self.logger.info(f"Processing {tif_file_path} with sheet name {sheet_name}")
 
-            plot_path = os.path.join(output_dir, f"{sheet_name}.png")
-            self.plot_tif(tif_file_path, plot_path)
+            if USER_INPUT['PLOT_MAPS']:
+                if self.merge_data:
+                    plot_name = f"{sheet_name}_merged.png"
+                else:
+                    plot_name = f"{sheet_name}.png"
+                plot_path = os.path.join(output_dir, plot_name)
+                self.plot_tif(tif_file_path, plot_path)
 
             area = self.calculate_area(tif_file_path)
             self.logger.info(f"Calculated area for {tif_file_path}: {area} km^2")
@@ -343,19 +364,25 @@ class ProcessingArea:
         """
 
         class_selection = self.class_selection
+
+        if self.merge_data:
+            filename_diff_sheets = f'{self.time_stamp}_{class_selection}_class_different_sheets_merged'
+            filename_combined = f'{self.time_stamp}_{class_selection}_class_combined_merged'
+        else:
+            filename_diff_sheets = f'{self.time_stamp}_{class_selection}_class_different_sheets'
+            filename_combined = f'{self.time_stamp}_{class_selection}_class_combined'
+
         with pd.ExcelWriter(
-                os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_different_sheets.xlsx'),
-                engine='xlsxwriter') as writer:
+                os.path.join(OUTPUT_PATH, f'{filename_diff_sheets}.xlsx'), engine='xlsxwriter') as writer:
             for sheet_name in combined_df['Sheet Name'].unique():
                 df_sheet = combined_df[combined_df['Sheet Name'] == sheet_name]
                 df_sheet.to_excel(writer, sheet_name=sheet_name[:31], index=False)
 
         with pd.ExcelWriter(
-                os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_combined.xlsx'),
-                engine='xlsxwriter') as writer:
+                os.path.join(OUTPUT_PATH, f'{filename_combined}.xlsx'), engine='xlsxwriter') as writer:
             combined_df.to_excel(writer, sheet_name='Results', index=False)
 
-        combined_df.to_pickle(os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_combined.pkl'))
+        combined_df.to_pickle(os.path.join(OUTPUT_PATH, f'{filename_combined}.pkl'))
 
         self.logger.info(f"Results saved to Excel and pickle files in {OUTPUT_PATH}")
 
