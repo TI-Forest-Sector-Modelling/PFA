@@ -117,7 +117,7 @@ class ProcessingArea:
             if os.name == "nt": #windows
                 tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
             else: #macOS/Linux
-                tif_file = f"/vsizip/{tif_file}/{tif_inside_zip}"
+                tif_file = f"/vsizip//{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -174,7 +174,7 @@ class ProcessingArea:
             if os.name == "nt":  # windows
                 tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
             else:  # macOS/Linux
-                tif_file = f"/vsizip/{tif_file}/{tif_inside_zip}"
+                tif_file = f"/vsizip//{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -208,7 +208,7 @@ class ProcessingArea:
             if os.name == "nt":  # windows
                 tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
             else:  # macOS/Linux
-                tif_file = f"/vsizip/{tif_file}/{tif_inside_zip}"
+                tif_file = f"/vsizip//{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -269,7 +269,7 @@ class ProcessingArea:
             if os.name == "nt":  # windows
                 raster_file = f"zip+file://{raster_file}!{tif_inside_zip}"
             else:  # macOS/Linux
-                raster_file = f"/vsizip/{raster_file}/{tif_inside_zip}"
+                raster_file = f"/vsizip//{raster_file}/{tif_inside_zip}"
         else:
             raster_file = os.path.abspath(raster_file)
 
@@ -414,12 +414,17 @@ class ProcessingArea:
         agri_raster_path = os.path.join(OUTPUT_PATH, new_agri_data_file)
         for src_data in tqdm(data_list, desc="Merging TIFF files"):
             if self.zipped_data:
-                folder_name = src_data.split(os.sep)[-1]
-                src_data_merged = f"{folder_name[:-4]}_merged.tif"
-                src_data_merged_zip = f"{folder_name[:-4]}_merged.zip"
-                src_data_merged = os.path.join(PREPROCESSED_DATA_PATH, src_data_merged)
-                src_data_merged_zip = os.path.join(PREPROCESSED_DATA_PATH, src_data_merged_zip)
-                src_data = f"zip+file://{src_data}!{folder_name[:-3]}tif"
+                folder_name = os.path.basename(src_data)[:-4]
+                src_data_merged = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_merged.tif")
+                src_data_merged_zip = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_merged.zip")
+
+                src_data_abs = os.path.abspath(src_data)
+                tif_inside_zip = self.extract_tif_from_zip(src_data_abs)
+
+                if os.name == "nt":  # Windows
+                    src_data = f"zip+file://{src_data_abs}!{tif_inside_zip}"
+                else:  # macOS/Linux
+                    src_data = f"/vsizip//{src_data_abs}/{tif_inside_zip}"
 
             if not os.path.isfile(src_data_merged_zip):
                 merge_with_windowing(forest_raster_path=src_data,

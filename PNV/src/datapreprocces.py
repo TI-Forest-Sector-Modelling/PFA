@@ -137,6 +137,16 @@ def read_raster(file_path: str):
         meta = dataset.meta
     return dataset, data, transform, crs, bounds, meta
 
+def extract_tif_from_zip(zip_path):
+    """
+    Returns the relative path to the first .tif file inside the ZIP folder.
+    """
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        for name in zip_ref.namelist():
+            if name.lower().endswith(".tif"):
+                print("Found TIF in zip:", name)
+                return name
+    raise FileNotFoundError("No .tif file found in ZIP.")
 
 def reproject_and_save(src_raster_path, output_path, forest_raster_path, zipped_data, logger):
     """
@@ -148,8 +158,13 @@ def reproject_and_save(src_raster_path, output_path, forest_raster_path, zipped_
     :param logger: Logger instance.
     """
     if zipped_data:
-        folder_name = forest_raster_path.split(os.sep)[-1]
-        forest_raster_path = f"zip+file://{forest_raster_path}!{folder_name[:-3]}tif"
+        forest_raster_path_abs = os.path.abspath(forest_raster_path)
+        tif_inside_zip = extract_tif_from_zip(forest_raster_path_abs)
+
+        if os.name == "nt":  # Windows
+            forest_raster_path = f"zip+file://{forest_raster_path_abs}!{tif_inside_zip}"
+        else:  # macOS/Linux
+            forest_raster_path = f"/vsizip//{forest_raster_path_abs}/{tif_inside_zip}"
 
     forest_data_rast, forest_data_np, target_transform, target_crs, bounds1, meta1 = read_raster(forest_raster_path)
     target_shape = forest_data_np.shape
