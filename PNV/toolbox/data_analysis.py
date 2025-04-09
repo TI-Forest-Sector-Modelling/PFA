@@ -36,6 +36,7 @@ class PnvDataAnalysis:
         self.selected_agg_lvl = user_input['SELECT_AGG_LVL']
         self.selected_iso = user_input['SELECT_ISO']
         self.rel_val_tolerance = user_input['REL_VAL_TOLERANCE']
+        self.merge_agri_data = user_input['MERGE_AGRI_DATA']
 
         self.save_figures = user_input['SAVE_FIGURE']
 
@@ -57,8 +58,11 @@ class PnvDataAnalysis:
         Deserialize PNV data from pkl-files provided by the main application.
         :return: Deserialized pnv_data dataframe.
         """
-        filename_path = max([f for f in pathlib.Path(
-            os.path.abspath(OUTPUT_PATH)).glob(f'*_{self.selected_pnv_classes}_class_combined.pkl')],
+        if self.merge_agri_data:
+            filename = f'*_{self.selected_pnv_classes}_class_combined_merged.pkl'
+        else:
+            filename = f'*_{self.selected_pnv_classes}_class_combined.pkl'
+        filename_path = max([f for f in pathlib.Path(os.path.abspath(OUTPUT_PATH)).glob(filename)],
                             key=os.path.getctime)
         self.logger.info(f"Readin PNV data from {filename_path}")
         with open(filename_path, "rb") as pkl_file:
@@ -129,10 +133,14 @@ class PnvDataAnalysis:
         :return: Reformated PNV dataframe.
         """
         self.logger.info(f"Reformate PNV data")
-        self.pnv_raw_data["total_area_ha"] = self.pnv_raw_data["Total Area (km^2)"] * 100
-        self.pnv_raw_data["total_area_tsd_ha"] = self.pnv_raw_data["total_area_ha"] / 1000
         kosovo_index = self.pnv_raw_data[self.pnv_raw_data["ISO"] == "-99"].index
         self.pnv_raw_data.loc[kosovo_index, "ISO"] = "XKX"
+        bonanella_land_surface_data = f"Bonannella_land_surface_km2_{self.selected_pnv_classes}classes"
+        self.pnv_raw_data = self.pnv_raw_data.merge(self.geo_data[["ISO", bonanella_land_surface_data]],
+                                                    left_on="ISO", right_on="ISO", how="left")
+        self.pnv_raw_data[bonanella_land_surface_data] = self.pnv_raw_data[bonanella_land_surface_data].fillna(1)
+        self.pnv_raw_data["total_area_ha"] = self.pnv_raw_data[bonanella_land_surface_data] * 100
+        self.pnv_raw_data["total_area_tsd_ha"] = self.pnv_raw_data["total_area_ha"] / 1000
         pnv_classes = self.pnv_raw_data.columns[3: 3 + self.selected_pnv_classes]
 
         pnv_raw_data_reformated = pd.DataFrame()
@@ -249,8 +257,10 @@ class PnvDataAnalysis:
         self.logger.info(f"Filter forest-related classes from NVP data")
         if self.selected_pnv_classes == 6:
             forest_classes = PotentialNaturalVegetationArea.forest_classes_6.value
+            forest_classes = list(forest_classes.values())
         if self.selected_pnv_classes == 20:
             forest_classes = PotentialNaturalVegetationArea.forest_classes_20.value
+            forest_classes = list(forest_classes.values())
 
         for key in self.pnv_data_dict.keys():
             tmp_data = self.pnv_data_dict[key].copy()
@@ -272,7 +282,8 @@ class PnvDataAnalysis:
         self.pnv_raw_data = self.reformate_pnv_data()
         self.pnv_data_dict = self.split_pnv_data()
         self.pnv_data_extrapolation()
-        self.land_surface_validation(rel_tolerance=self.rel_val_tolerance)
+        if not self.merge_agri_data:
+            self.land_surface_validation(rel_tolerance=self.rel_val_tolerance)
         self.filter_forest_pnv_data()
 
     def build_geolocalized_subfig(self, mapx: float, mapy: float, ax: int, width: float, data: pd.DataFrame, title: str,
@@ -399,6 +410,8 @@ class PnvDataAnalysis:
                 fig_data = fig_data.merge(total_area, left_on=self.selected_agg_lvl, right_on=self.selected_agg_lvl,
                                           how="left")
                 fig_data["forest_cover"] = (fig_data[self.selected_year] / fig_data["total_area_tsd_ha"]) * 100
+                correction_index = fig_data[fig_data["forest_cover"] > 100].index
+                fig_data.loc[correction_index, "forest_cover"] = 0
             else:
                 fig_data = fig_data.groupby([
                     self.selected_agg_lvl, "scenario", "pnv_class"])[self.selected_year].sum().reset_index()
@@ -409,6 +422,8 @@ class PnvDataAnalysis:
                     tmp_data = tmp_data.merge(total_area, left_on=self.selected_agg_lvl, right_on=self.selected_agg_lvl,
                                               how="left")
                     tmp_data["forest_cover"] = (tmp_data[self.selected_year] / tmp_data["total_area_tsd_ha"]) * 100
+                    correction_index = tmp_data[tmp_data["forest_cover"] > 100].index
+                    tmp_data.loc[correction_index, "forest_cover"] = 0
                     tmp_data = pd.DataFrame(tmp_data["forest_cover"]).rename(columns={"forest_cover": pnv_class}
                                                                              ).reset_index(drop=True)
                     fig_data_new = pd.concat([fig_data_new, tmp_data], axis=1)
@@ -490,8 +505,11 @@ class PnvDataAnalysis:
 
         if self.save_figures:
             self.logger.info(f"Save barplot")
-            plt.savefig(f"{self.output_folder}\\{self.current_dt}_bar_plot_{self.output_name}.png",
-                        dpi=300, bbox_inches='tight')
+            if self.merge_agri_data:
+                fig_name = f"{self.current_dt}_bar_plot_{self.output_name}_merged"
+            else:
+                fig_name = f"{self.current_dt}_bar_plot_{self.output_name}"
+            plt.savefig(f"{self.output_folder}\\{fig_name}.png", dpi=300, bbox_inches='tight')
 
     def pnv_world_map(self, fig_option: str, winkel_reproject: bool, dissolve_map_regions: bool):
         """
@@ -529,6 +547,8 @@ class PnvDataAnalysis:
                                             right_on=agg_lvl_back, how="left")
         fig_data_back = fig_data_back[fig_data_back["total_area_tsd_ha"] > 0].reset_index(drop=True)
         fig_data_back["forest_cover"] = (fig_data_back[self.selected_year] / fig_data_back["total_area_tsd_ha"]) * 100
+        correction_index = fig_data_back[fig_data_back["forest_cover"] > 100].index
+        fig_data_back.loc[correction_index, "forest_cover"] = 0
 
         # Map foreground data (forest pnv class shares or forest pnv area)
         if "ISO" in self.selected_agg_lvl:
@@ -561,7 +581,7 @@ class PnvDataAnalysis:
             fig_data_back = fig_data_back[fig_data_back[agg_lvl_back] != 0].reset_index(drop=True)
             fig_data_back = fig_data_back.dissolve(by=agg_lvl_back, aggfunc="mean")
 
-        fig_data_back.plot(column="forest_cover", ax=ax, cmap=cmap, edgecolor="#04253a")
+        fig_data_back.plot(column="forest_cover", ax=ax, cmap=cmap, edgecolor="#04253a", vmin=0, vmax=100)
         # colorbar
         divider = make_axes_locatable(ax)  # for legend-colorbar
         cax = divider.append_axes("right", size="5%", pad=0.1)  # for legend-colorbar
@@ -637,9 +657,11 @@ class PnvDataAnalysis:
         ax.set_title(f"PNV_world_map_{agg_lvl_fore}_{'_'.join(self.selected_rcp)}_{self.selected_year}")
         if self.save_figures:
             self.logger.info(f"Save world map")
-            plt.savefig(
-                f"{self.output_folder}\\{self.current_dt}_world_map_{self.output_name}.png",
-                dpi=300, bbox_inches='tight')
+            if self.merge_agri_data:
+                fig_name = f"{self.current_dt}_world_map_{self.output_name}_merged"
+            else:
+                fig_name = f"{self.current_dt}_world_map_{self.output_name}"
+            plt.savefig(f"{self.output_folder}\\{fig_name}.png", dpi=300, bbox_inches='tight')
 
     def toolbox_plot(self):
         """
