@@ -7,13 +7,14 @@ import os
 import glob
 import pandas as pd
 import datetime as dt
+import zipfile
 
 from rasterio.mask import mask
 from shapely.geometry import mapping
 from tqdm import tqdm
 
 from PNV.src.datamanager import colors_6, labels_6, colors_20, labels_20
-from PNV.src.datapreprocces import process_all_files
+from PNV.src.datapreprocces import (process_all_files, reproject_and_save, merge_with_windowing)
 from PNV.user_input.default_parameters import USER_INPUT, TOOLBOX_INPUT, SRC_CRS, DST_CRS
 from PNV.src.base_logger import get_logger
 from PNV.paths.paths import INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, OUTPUT_PATH
@@ -29,6 +30,7 @@ class ProcessingArea:
         self.time_stamp = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
         self.class_selection = USER_INPUT['CLASS_SELECTION']
         self.zipped_data = USER_INPUT['ZIPPED_DATA']
+        self.merge_data = USER_INPUT['MERGE_AGRI_DATA']
 
         if self.class_selection not in [6, 20]:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
@@ -38,16 +40,22 @@ class ProcessingArea:
             self.logger.info(f"Processing data...")
             process_all_files(INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, SRC_CRS, DST_CRS)
             self.logger.info(f"Data processing complete.")
+        if self.merge_data:
+            self.logger.info(f"Merging PNV and other land use data...")
+            self.readin_agri_data()
+            self.merge_agri_data()
+            self.logger.info(f"Data merging complete.")
 
-        self.tif_files = self.filter_tif_files_by_selection()
+        self.tif_files = self.filter_tif_files_by_selection(merged_agri_data=self.merge_data)
         self.logger.info(f"Found {len(self.tif_files)} relevant TIF files for class selection {self.class_selection}.")
 
         combined_df = self.process_files(self.tif_files, OUTPUT_PATH)
         self.save_results(combined_df)
 
-    def filter_tif_files_by_selection(self):
+    def filter_tif_files_by_selection(self, merged_agri_data: bool):
         """
         Filters the TIF files to match the selected class based on class_selection.
+        :param merged_agri_data: Flag to control if merged data are selected (True) or not (False).
         :return: List of filtered TIF files relevant to the selected class.
         """
         data_path = PREPROCESSED_DATA_PATH
@@ -68,10 +76,23 @@ class ProcessingArea:
         self.logger.debug(f"Total tif files found: {len(all_tif_files)}")
 
         if self.class_selection == 6:
-            return [file for file in all_tif_files if 'iucn' in file.lower()]
+            file_list = [file for file in all_tif_files if 'iucn' in file.lower()]
         elif self.class_selection == 20:
-            return [file for file in all_tif_files if 'biome6k' in file.lower()]
-        return []
+            file_list = [file for file in all_tif_files if 'biome6k' in file.lower()]
+
+        if merged_agri_data:
+            file_list = [file for file in file_list if 'merged' in file.lower()]
+        else:
+            file_list = [file for file in file_list if 'merged' not in file.lower()]
+
+        return file_list
+
+    def extract_tif_from_zip(self, zip_path):
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            for file in zip_ref.namelist():
+                if file.endswith(".tif"):
+                    return file
+        raise FileNotFoundError(f'No tif file in {zip_path} found')
 
     def plot_tif(self, tif_file: str, output_path: str):
         """
@@ -91,21 +112,45 @@ class ProcessingArea:
         cmap = mcolors.ListedColormap(colors)
 
         if self.zipped_data:
-            folder_name = os.path.normpath(tif_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(tif_file)
+
+            if os.name == "nt": #windows
+                tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
+            else: #macOS/Linux
+                tif_file = f"/vsizip//{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
+        window_size = 512
+        downscale_factor = USER_INPUT['PLOT_DOWNSCALE_FACTOR']
         with rasterio.open(tif_file) as src:
-            img = src.read(1)
-            unique_values = np.unique(img)
+            height, width = src.height, src.width
+            img_full = np.zeros((height, width), dtype=src.dtypes[0])
+            unique_values_set = set()
 
+            for row in range(0, height, window_size):
+                for col in range(0, width, window_size):
+                    w = min(window_size, width - col)
+                    h = min(window_size, height - row)
+                    window = rasterio.windows.Window(col, row, w, h)
+                    img_full[row:row + h, col:col + w] = src.read(1, window=window)
+                    unique_values_set.update(np.unique(src.read(1, window=window)))
+
+            unique_values = np.array(sorted(unique_values_set))
+            unique_values = unique_values[~np.isnan(unique_values)]
+            
             if len(unique_values) > len(colors):
                 raise ValueError(f"The image has more than {len(colors)} classes.")
 
+            new_height, new_width = height // downscale_factor, width // downscale_factor
+            img_downscaled = src.read(
+                1,
+                out_shape=(1, new_height, new_width),
+                resampling=rasterio.enums.Resampling.nearest
+            )
+
             plt.figure(figsize=(14, 10))
-            plt.imshow(img, cmap=cmap, interpolation='nearest')
+            plt.imshow(img_downscaled, cmap=cmap, interpolation='nearest')
             cbar = plt.colorbar(ticks=range(len(colors)))
             cbar.ax.set_yticklabels(labels)
             cbar.ax.yaxis.set_tick_params(labelsize=10)
@@ -124,9 +169,12 @@ class ProcessingArea:
         returns: Total area in km².
         """
         if self.zipped_data:
-            folder_name = os.path.normpath(tif_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(tif_file)
+
+            if os.name == "nt":  # windows
+                tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
+            else:  # macOS/Linux
+                tif_file = f"/vsizip//{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -155,9 +203,12 @@ class ProcessingArea:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
 
         if self.zipped_data:
-            folder_name = os.path.normpath(tif_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            tif_file = f"zip+file://{tif_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(tif_file)
+
+            if os.name == "nt":  # windows
+                tif_file = f"zip+file://{tif_file}!{tif_inside_zip}"
+            else:  # macOS/Linux
+                tif_file = f"/vsizip//{tif_file}/{tif_inside_zip}"
         else:
             tif_file = os.path.abspath(tif_file)
 
@@ -192,7 +243,7 @@ class ProcessingArea:
 
             return results_df
 
-    def get_pixel_values_by_country(self, raster_file: pd.DataFrame, log_enabled=False):
+    def get_pixel_values_by_country(self, raster_file: pd.DataFrame):
         """
         Calculates the pixels of the TIFF files for each category of vegetation area and each country on a global
         level.
@@ -213,19 +264,18 @@ class ProcessingArea:
         pixel_counts_df = pd.DataFrame(columns=['country', 'ISO'] + labels + ['Total Pixels', 'Total Area (km^2)'])
 
         if self.zipped_data:
-            folder_name = os.path.normpath(raster_file)
-            folder_name = folder_name.split(os.sep)[-1]
-            raster_file = f"zip+file://{raster_file}!{folder_name[:-3]}tif"
+            tif_inside_zip = self.extract_tif_from_zip(raster_file)
+
+            if os.name == "nt":  # windows
+                raster_file = f"zip+file://{raster_file}!{tif_inside_zip}"
+            else:  # macOS/Linux
+                raster_file = f"/vsizip//{raster_file}/{tif_inside_zip}"
         else:
             raster_file = os.path.abspath(raster_file)
 
         with rasterio.open(raster_file) as src:
             resolution = src.res
             pixel_area_km2 = (resolution[0] * resolution[1]) / 1e6
-
-            img = src.read(1)
-            total_pixels = img.size
-            total_area_km2 = total_pixels * pixel_area_km2
 
             for index, country in world.iterrows():
                 geometry = [mapping(country['geometry'])]
@@ -274,8 +324,13 @@ class ProcessingArea:
 
             self.logger.info(f"Processing {tif_file_path} with sheet name {sheet_name}")
 
-            plot_path = os.path.join(output_dir, f"{sheet_name}.png")
-            self.plot_tif(tif_file_path, plot_path)
+            if USER_INPUT['PLOT_MAPS']:
+                if self.merge_data:
+                    plot_name = f"{sheet_name}_merged.png"
+                else:
+                    plot_name = f"{sheet_name}.png"
+                plot_path = os.path.join(output_dir, plot_name)
+                self.plot_tif(tif_file_path, plot_path)
 
             area = self.calculate_area(tif_file_path)
             self.logger.info(f"Calculated area for {tif_file_path}: {area} km^2")
@@ -309,20 +364,72 @@ class ProcessingArea:
         """
 
         class_selection = self.class_selection
+
+        if self.merge_data:
+            filename_diff_sheets = f'{self.time_stamp}_{class_selection}_class_different_sheets_merged'
+            filename_combined = f'{self.time_stamp}_{class_selection}_class_combined_merged'
+        else:
+            filename_diff_sheets = f'{self.time_stamp}_{class_selection}_class_different_sheets'
+            filename_combined = f'{self.time_stamp}_{class_selection}_class_combined'
+
         with pd.ExcelWriter(
-                os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_different_sheets.xlsx'),
-                engine='xlsxwriter') as writer:
+                os.path.join(OUTPUT_PATH, f'{filename_diff_sheets}.xlsx'), engine='xlsxwriter') as writer:
             for sheet_name in combined_df['Sheet Name'].unique():
                 df_sheet = combined_df[combined_df['Sheet Name'] == sheet_name]
                 df_sheet.to_excel(writer, sheet_name=sheet_name[:31], index=False)
 
         with pd.ExcelWriter(
-                os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_combined.xlsx'),
-                engine='xlsxwriter') as writer:
+                os.path.join(OUTPUT_PATH, f'{filename_combined}.xlsx'), engine='xlsxwriter') as writer:
             combined_df.to_excel(writer, sheet_name='Results', index=False)
 
-        combined_df.to_pickle(os.path.join(OUTPUT_PATH, f'{self.time_stamp}_{class_selection}_class_combined.pkl'))
+        combined_df.to_pickle(os.path.join(OUTPUT_PATH, f'{filename_combined}.pkl'))
 
         self.logger.info(f"Results saved to Excel and pickle files in {OUTPUT_PATH}")
 
+    def readin_agri_data(self):
+        """
+        Reads in the global land use dataset HILDA+ containing agricultural and urban land use data. The HILDA-dataset
+        is reprojected to match PNV from Bonanella
+        """
+        self.logger.info(f"Merge forest and agricultural area data")
+        agri_data_file = 'hilda_plus_2015_states_GLOB-v1-0_base-map_wgs84-nn.tif'
+        new_agri_data_file = 'hilda_plus_2015_epsg8857.tif'
+        input_path = os.path.join(INPUT_RAW_DATA_PATH, agri_data_file)
+        output_path = os.path.join(OUTPUT_PATH, new_agri_data_file)
+        data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
+
+        reproject_and_save(src_raster_path=input_path,
+                           output_path=output_path,
+                           forest_raster_path=data_list[0],
+                           zipped_data=self.zipped_data,
+                           logger=self.logger)
+
+    def merge_agri_data(self):
+        """
+        Merges forest data from Bonanella with HILDA+ land use data.
+        """
+        self.logger.info(f"Merge forest and agricultural area data")
+        data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
+        new_agri_data_file = 'hilda_plus_2015_epsg8857.tif'
+        agri_raster_path = os.path.join(OUTPUT_PATH, new_agri_data_file)
+        for src_data in tqdm(data_list, desc="Merging TIFF files"):
+            if self.zipped_data:
+                folder_name = os.path.basename(src_data)[:-4]
+                src_data_merged = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_merged.tif")
+                src_data_merged_zip = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_merged.zip")
+
+                src_data_abs = os.path.abspath(src_data)
+                tif_inside_zip = self.extract_tif_from_zip(src_data_abs)
+
+                if os.name == "nt":  # Windows
+                    src_data = f"zip+file://{src_data_abs}!{tif_inside_zip}"
+                else:  # macOS/Linux
+                    src_data = f"/vsizip//{src_data_abs}/{tif_inside_zip}"
+
+            if not os.path.isfile(src_data_merged_zip):
+                merge_with_windowing(forest_raster_path=src_data,
+                                     agri_raster_path=agri_raster_path,
+                                     merged_raster_path=src_data_merged,
+                                     zipped_data=self.zipped_data,
+                                     selected_pnv_classes=self.class_selection)
 

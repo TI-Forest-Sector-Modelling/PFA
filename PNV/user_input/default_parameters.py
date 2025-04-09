@@ -1,8 +1,11 @@
 USER_INPUT = {
-    'PROCESS_DATA': False,  # False: no preprocessing and transformation of coordinate system; True: transforming
+    'PROCESS_DATA': True ,  # False: no preprocessing and transformation of coordinate system; True: transforming
     # coordinate system to another
     'CLASS_SELECTION': 20,  # 6 or 20 based on choosing hard classes
-    'ZIPPED_DATA': True
+    'PLOT_MAPS': True,
+    'PLOT_DOWNSCALE_FACTOR': 4,  # Factor to downscale plotted world maps (no downscale == 1)
+    'ZIPPED_DATA': True,
+    'MERGE_AGRI_DATA': False
 }
 
 SRC_CRS = 'EPSG:4326'
@@ -28,13 +31,14 @@ Information about TOOLBOX_INPUT:
 """
 
 TOOLBOX_INPUT = {
-    'SELECT_PNV_CLASS': 6,
+    'SELECT_PNV_CLASS': 20,
+    'MERGE_AGRI_DATA': True,
     'SELECT_YEAR': 2050,
     'SELECT_RCP': ['rcp26', 'rcp45', 'rcp85'],
-    'SELECT_AGG_LVL': 'country',
+    'SELECT_AGG_LVL': 'continents',
     'SELECT_ISO': ['big_10'],
     'REL_VAL_TOLERANCE': 0.3,
     'PAPER_FORMAT': True,
     'SAVE_FIGURE': True,
-    'OUTPUT_NAME': 'test_test_output'
+    'OUTPUT_NAME': '_6k'
 }
