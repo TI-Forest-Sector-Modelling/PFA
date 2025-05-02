@@ -2,18 +2,12 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-title: PNV (Potential Natural Vegetation data processing)  # TODO discuss title
+title: Country-specific calculation of potential forest area (PFA)
 message: >-
   All authors have contributed equally to the project. The individual authors are listed as
   Co-authors in alphabetical order.
 type: software
 authors:
-  - country: DE
-    city: Hamburg
-    name: TI-FSM
-    email: wf-timba@thuenen.de
-    address: Leuschnerstraße 91
-    post-code: '21031'
   - given-names: Julia
     family-names: Tandetzki
     email: julia.tandetzki@thuenen.de
@@ -30,7 +24,17 @@ identifiers:
     description: ''
 repository-code: ''
 abstract: |-
-  To be defined.
+  This package processes the model outputs from Bonannella et al. (2023), which provide spatially detailed global projections of potential natural vegetation (PNV) areas under three different climate change scenarios 
+(RCP 2.6, 4.5, and 8.5) (van Vuuren et al. 2011) until 2080 (Bonnanella et al. 2023). We focus on processing these results (using TIFF files) to derive forest area estimates at the country level. The package begins 
+with aggregating the data by country and adjusting forest definitions to match biome types and IUCN classifications, as provided in the dataset under PNV areas. The projections are converted to EPSG 8857 and then 
+clipped with country data provided by geopandas at a 1x1 km pixel resolution. This allows us to derive country-specific areas in km². A toolbox is included to validate the results with alternative datasets (e.g., WDI).
+The package offers flexibility, enabling users to analyze not only the Bonanella et al. (2023) data but also other spatial maps using Python. Additionally, we examine how forest areas within countries and continents 
+change up to 2080, focusing on both increases and decreases across various time frames. This tool can support long-term international forest and policy modelling, similar to other projects that leverage complex datasets 
+for future scenario analysis.
+
+  Bonannella, Carmelo; Hengl, Tomislav; Parente, Leandro; Bruin, Sytze de (2023): Biomes of the world under climate change scenarios: increasing aridity and higher temperatures lead to significant shifts in natural vegetation. In PeerJ 11, e15593. DOI: 10.7717/peerj.15593.
+  Van Vuuren, D.P., Edmonds, J., Kainuma, M. et al. The representative concentration pathways: an overview. Climatic Change 109, 5 (2011). https://doi.org/10.1007/s10584-011-0148-z
+
 keywords:
   - research
   - Forest sector model
