@@ -8,12 +8,16 @@ import glob
 import pandas as pd
 import datetime as dt
 import zipfile
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.patches as mpatches
 
 from rasterio.mask import mask
 from shapely.geometry import mapping
 from tqdm import tqdm
 
-from PNV.src.datamanager import colors_6, labels_6, colors_20, labels_20
+from PNV.src.datamanager import (colors_6, labels_6, colors_6_forest, labels_6_forest, colors_20, labels_20,
+                                 colors_20_forest, labels_20_forest)
 from PNV.src.datapreprocces import (process_all_files, reproject_and_save, merge_with_windowing)
 from PNV.user_input.default_parameters import USER_INPUT, TOOLBOX_INPUT, SRC_CRS, DST_CRS
 from PNV.src.base_logger import get_logger
@@ -101,11 +105,23 @@ class ProcessingArea:
         :param output_path: String of the output folder.
         """
         if self.class_selection == 20:
-            colors = colors_20
-            labels = labels_20
+            if self.merge_data:
+                colors = colors_20_forest
+                labels = labels_20_forest
+                ncols = 4
+            else:
+                colors = colors_20
+                labels = labels_20
+                ncols = 4
         elif self.class_selection == 6:
-            colors = colors_6
-            labels = labels_6
+            if self.merge_data:
+                colors = colors_6_forest
+                labels = labels_6_forest
+                ncols = 1
+            else:
+                colors = colors_6
+                labels = labels_6
+                ncols = 2
         else:
             raise ValueError("Invalid number of classes. Must be 6 or 20.")
 
@@ -148,18 +164,51 @@ class ProcessingArea:
                 out_shape=(1, new_height, new_width),
                 resampling=rasterio.enums.Resampling.nearest
             )
+            bounds = src.bounds
+            extent = [bounds.left, bounds.right, bounds.bottom, bounds.top]
 
-            plt.figure(figsize=(14, 10))
-            plt.imshow(img_downscaled, cmap=cmap, interpolation='nearest')
-            cbar = plt.colorbar(ticks=range(len(colors)))
-            cbar.ax.set_yticklabels(labels)
-            cbar.ax.yaxis.set_tick_params(labelsize=10)
-            cbar.ax.yaxis.set_ticks_position('right')
+            original_crs = ccrs.epsg(8857)
+            target_crs = ccrs.Robinson()
+
+
+            fig, ax = plt.subplots(figsize=(14, 10))
+            fig.delaxes(ax)
+
+            ax_position = [0.1, 0.1, 0.8, 0.8]
+            ax = fig.add_axes(ax_position, projection=target_crs)
+            im = ax.imshow(img_downscaled,
+                           cmap=cmap,
+                           extent=extent,
+                           transform=original_crs,
+                           interpolation='nearest')
+            ax.set_global()
+            ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
+            ax.coastlines()
+            ax.add_feature(cfeature.BORDERS, linewidth=0.3)
+
+            colors = {biome: colors[1:][i] for i, biome in enumerate(labels[1:])}
+
+            header_region = [mpatches.Patch(facecolor="none", edgecolor="none", label="Biomes")]
+            region_patches = [mpatches.Patch(color=color, label=biome) for biome, color in colors.items()]
+            legend_patches = header_region + region_patches
+
+            legend = ax.legend(handles=legend_patches,
+                               loc="lower center",
+                               bbox_to_anchor=(0.5, -0.3),
+                               ncols=ncols,
+                               fontsize=12)
 
             filename = os.path.splitext(os.path.basename(tif_file))[0]
-            plt.title(filename)
-            plt.tight_layout(rect=[0, 0, 0.85, 1])
-            plt.savefig(output_path)
+            filename = '.'.join(filename.split('.')[0:4])
+            plt.title(filename, loc='center', fontsize=14)
+
+            gl = ax.gridlines(draw_labels=True, linewidth=0.3, color='gray', alpha=0.5, linestyle='--')
+            gl.top_labels = False
+            gl.right_labels = False
+            gl.xlabel_style = {'size': 12}
+            gl.ylabel_style = {'size': 12}
+
+            plt.savefig(output_path, bbox_inches='tight', pad_inches=0.1, dpi=300)
             plt.close()
 
     def calculate_area(self, tif_file: str):
