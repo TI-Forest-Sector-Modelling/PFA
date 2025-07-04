@@ -3,26 +3,28 @@ from PNV.src.logic import ProcessingArea
 from PNV.toolbox.data_analysis import PnvDataAnalysis
 
 
-def launch_toolbox(user_input: dict):
+def launch_toolbox(tb_user_input: dict, pj_user_input: dict):
     """
     Launches the toolbox to validate and visualize aggregated data.
-    :param user_input: Dictionary holding all user inputs.
+    :param tb_user_input: Dictionary holding all user inputs for toolbox
+    :param pj_user_input: Dictionary holding all user inputs for project
     """
 
-    pnv_analysis = PnvDataAnalysis(user_input=user_input)
-    pnv_analysis.toolbox_plot()
+    pnv_analysis = PnvDataAnalysis(tb_user_input=tb_user_input, pj_user_input=pj_user_input)
+    if pj_user_input['GENERATE_FIG']:
+        pnv_analysis.toolbox_plot()
+    if pj_user_input['GENERATE_GIF']:
+        pnv_analysis.toolbox_gif()
 
 
-def main(plot_fig: bool):
+def main():
     """
     Main entry point for PNV project.
-    :param plot_fig: Flag indicating whether to validate and visualize aggregated data.
     """
     preprocessing = ProcessingArea()
-    if plot_fig:
-        launch_toolbox(user_input=TOOLBOX_INPUT)
+    launch_toolbox(tb_user_input=TOOLBOX_INPUT, pj_user_input=USER_INPUT)
 
 
 if __name__ == "__main__":
-    main(plot_fig=True)
+    main()
 
