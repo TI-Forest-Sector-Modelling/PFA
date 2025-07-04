@@ -21,7 +21,8 @@ from PNV.src.datamanager import (colors_6, labels_6, colors_6_forest, labels_6_f
 from PNV.src.datapreprocces import (process_all_files, reproject_and_save, merge_with_windowing)
 from PNV.user_input.default_parameters import USER_INPUT, TOOLBOX_INPUT, SRC_CRS, DST_CRS
 from PNV.src.base_logger import get_logger
-from PNV.paths.paths import INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, OUTPUT_PATH
+from PNV.paths.paths import (INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, OUTPUT_PATH, HILDAv2_DATA_2015_PATH,
+                             HILDAv2_DATA_2020_PATH, HILDAv2_DATA_2015_NEW_CRD_PATH, HILDAv2_DATA_2020_NEW_CRD_PATH)
 
 
 class ProcessingArea:
@@ -35,6 +36,7 @@ class ProcessingArea:
         self.class_selection = USER_INPUT['CLASS_SELECTION']
         self.zipped_data = USER_INPUT['ZIPPED_DATA']
         self.merge_data = USER_INPUT['MERGE_AGRI_DATA']
+        self.year_agri_data = USER_INPUT['YEAR_AGRI_DATA']
 
         if self.class_selection not in [6, 20]:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
@@ -441,14 +443,19 @@ class ProcessingArea:
         is reprojected to match PNV from Bonanella
         """
         self.logger.info(f"Merge forest and agricultural area data")
-        agri_data_file = 'hilda_plus_2015_states_GLOB-v1-0_base-map_wgs84-nn.tif'
-        new_agri_data_file = 'hilda_plus_2015_epsg8857.tif'
-        input_path = os.path.join(INPUT_RAW_DATA_PATH, agri_data_file)
-        output_path = os.path.join(OUTPUT_PATH, new_agri_data_file)
+        if self.year_agri_data == 2015:
+            agri_data_file = HILDAv2_DATA_2015_PATH
+            new_agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
+        elif self.year_agri_data == 2020:
+            agri_data_file = HILDAv2_DATA_2020_PATH
+            new_agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
+        else:
+            raise ValueError("Invalid year of HILDA data. Must be 2015 or 2020.")
+
         data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
 
-        reproject_and_save(src_raster_path=input_path,
-                           output_path=output_path,
+        reproject_and_save(src_raster_path=agri_data_file,
+                           output_path=new_agri_data_file,
                            forest_raster_path=data_list[0],
                            zipped_data=self.zipped_data,
                            logger=self.logger)
@@ -459,8 +466,12 @@ class ProcessingArea:
         """
         self.logger.info(f"Merge forest and agricultural area data")
         data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
-        new_agri_data_file = 'hilda_plus_2015_epsg8857.tif'
-        agri_raster_path = os.path.join(OUTPUT_PATH, new_agri_data_file)
+        if self.year_agri_data == 2015:
+            agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
+        elif self.year_agri_data == 2020:
+            agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
+        else:
+            raise ValueError("Invalid year of HILDA data. Must be 2015 or 2020.")
         for src_data in tqdm(data_list, desc="Merging TIFF files"):
             if self.zipped_data:
                 folder_name = os.path.basename(src_data)[:-4]
@@ -477,7 +488,7 @@ class ProcessingArea:
 
             if not os.path.isfile(src_data_merged_zip):
                 merge_with_windowing(forest_raster_path=src_data,
-                                     agri_raster_path=agri_raster_path,
+                                     agri_raster_path=agri_data_file,
                                      merged_raster_path=src_data_merged,
                                      zipped_data=self.zipped_data,
                                      selected_pnv_classes=self.class_selection)
