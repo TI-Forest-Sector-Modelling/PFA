@@ -3,8 +3,9 @@ import pandas as pd
 import numpy as np
 import datetime as dt
 import pickle
-import pathlib
+from pathlib import Path
 import os.path
+from PIL import Image
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -15,7 +16,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 from PNV.paths.paths import OUTPUT_PATH, INPUT_RAW_DATA_PATH
-from PNV.user_input.default_parameters import TOOLBOX_INPUT
+from PNV.user_input.default_parameters import TOOLBOX_INPUT, USER_INPUT
 from PNV.src.base_logger import get_logger
 from PNV.src.defines import PotentialNaturalVegetationArea, Coordinates
 
@@ -62,12 +63,18 @@ class PnvDataAnalysis:
             filename = f'*_{self.selected_pnv_classes}_class_combined_merged.pkl'
         else:
             filename = f'*_{self.selected_pnv_classes}_class_combined.pkl'
-        filename_path = max([f for f in pathlib.Path(os.path.abspath(OUTPUT_PATH)).glob(filename)],
-                            key=os.path.getctime)
-        self.logger.info(f"Readin PNV data from {filename_path}")
-        with open(filename_path, "rb") as pkl_file:
-            obj = pickle.load(pkl_file)
-        return obj
+        try:
+            filename_path = max([f for f in Path(os.path.abspath(OUTPUT_PATH)).glob(filename)],
+                                key=os.path.getctime)
+            self.logger.info(f"Readin PNV data from {filename_path}")
+            with open(filename_path, "rb") as pkl_file:
+                obj = pickle.load(pkl_file)
+            return obj
+
+        except ValueError:
+            self.logger.info("No files found for the selected PNV classes. Please check the output folder or rerun the "
+                             "main application")
+            return None
 
     def readin_geo_data(self) -> pd.DataFrame:
         """
@@ -663,6 +670,45 @@ class PnvDataAnalysis:
                 fig_name = f"{self.current_dt}_world_map_{self.output_name}"
             plt.savefig(f"{self.output_folder}\\{fig_name}.png", dpi=300, bbox_inches='tight')
 
+
+    def generate_gif(self):
+        """
+        Generates a gif file with the latest produced maps.
+        """
+        for rcp in self.selected_rcp:
+            if self.merge_agri_data:
+                output_gif = f'Land_use_animation_pnv{self.selected_pnv_classes}_{rcp}_merged.gif'
+                if self.selected_pnv_classes == 20:
+                    filename_hist = f'biome6k.hcl_c_1km_a_19790101_merged.png'
+                    filename = f'biome6k.hcl.{rcp}*_merged.png'
+                else:
+                    filename_hist = f'iucn.hcl_c_1km_a_19790101_merged.png'
+                    filename = f'iucn.hcl.{rcp}*_merged.png'
+            else:
+                output_gif = f'Land_use_animation_pnv{self.selected_pnv_classes}_{rcp}.gif'
+                if self.selected_pnv_classes == 20:
+                    filename_hist = f'biome6k.hcl_c_1km_a_19790101.png'
+                    filename = f'biome6k.hcl.{rcp}*.png'
+                else:
+                    filename_hist = f'iucn.hcl_c_1km_a_19790101.png'
+                    filename = f'iucn.hcl.{rcp}*.png'
+            try:
+                output_gif_path = Path(os.path.abspath(OUTPUT_PATH)) / Path(output_gif)
+                filename_hist = Path(os.path.abspath(OUTPUT_PATH)) / Path(filename_hist)
+                filename_path = [filename_hist] + [f for f in Path(os.path.abspath(OUTPUT_PATH)).glob(filename)]
+                images = [Image.open(img) for img in filename_path]
+                images[0].save(
+                    output_gif_path,
+                    save_all=True,
+                    append_images=images[1:],
+                    duration=500,  # milliseconds per frame, adjust speed here
+                    loop=0  # 0 means loop forever
+                )
+
+            except ValueError:
+                self.logger.info("No files found for the selected PNV classes. Please check the output folder or rerun the"
+                                 " main application")
+
     def toolbox_plot(self):
         """
         Bundles and executes all functions to process and visualize the data based on the user input.
@@ -680,20 +726,29 @@ class PnvDataAnalysis:
                            )
         self.logger.info(f"PNV data analysis completed")
 
+    def toolbox_gif(self):
+        self.generate_gif()
+
 
 if __name__ == "__main__":
 
-    pnv_analysis = PnvDataAnalysis(user_input=TOOLBOX_INPUT)
+    pnv_analysis = PnvDataAnalysis(tb_user_input=TOOLBOX_INPUT, pj_user_input=USER_INPUT)
 
     pnv_analysis.preprocess_pnv_data()
-
-    pnv_analysis.pnv_bar_plot(plot_option='rel',  # options: ['abs', 'rel']
-                              aggregate_forest=False  # options: True or False
-                              )
+    if USER_INPUT['GENERATE_FIG']:
+        pnv_analysis.pnv_bar_plot(plot_option='rel',  # options: ['abs', 'rel']
+                                  aggregate_forest=False  # options: True or False
+                                  )
 
     pnv_analysis.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
                                winkel_reproject=False,
                                dissolve_map_regions=True
                                )
+        pnv_analysis.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
+                                   winkel_reproject=False,
+                                   dissolve_map_regions=True
+                                   )
+    if USER_INPUT['GENERATE_GIF']:
+        pnv_analysis.generate_gif()
     pnv_analysis.logger.info(f"PNV data analysis completed")
 
