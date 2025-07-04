@@ -7,6 +7,8 @@ USER_INPUT = {
     'ZIPPED_DATA': True,
     'MERGE_AGRI_DATA': False
     'YEAR_AGRI_DATA': 2020  # Options: 2015, 2020 (From HILDA+ v2.0 Winkler et al. 2025)
+    'GENERATE_FIG': True,
+    'GENERATE_GIF': True
 }
 
 SRC_CRS = 'EPSG:4326'
