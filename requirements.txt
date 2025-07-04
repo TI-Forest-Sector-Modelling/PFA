@@ -12,3 +12,4 @@ seaborn==0.13.2
 tqdm==4.66.5
 coverage==7.6.1
 tomli==2.0.2
+pillow==11.1.0
