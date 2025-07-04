@@ -22,33 +22,35 @@ from PNV.src.defines import PotentialNaturalVegetationArea, Coordinates
 
 
 class PnvDataAnalysis:
-    def __init__(self, user_input: dict):
+    def __init__(self, tb_user_input: dict, pj_user_input: dict):
         """
         Initialization of the class PnvDataAnalysis and read-in of input data.
-        :param user_input: Dictionary of input parameters.
+        :param tb_user_input: Dictionary of input parameters.
+        :param pj_user_input: Dictionary of project parameters.
         """
 
         self.current_dt = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
         self.logger = get_logger(user_path=None)
 
-        self.selected_pnv_classes = user_input['SELECT_PNV_CLASS']
-        self.selected_year = user_input['SELECT_YEAR']
-        self.selected_rcp = user_input['SELECT_RCP']
-        self.selected_agg_lvl = user_input['SELECT_AGG_LVL']
-        self.selected_iso = user_input['SELECT_ISO']
-        self.rel_val_tolerance = user_input['REL_VAL_TOLERANCE']
-        self.merge_agri_data = user_input['MERGE_AGRI_DATA']
+        self.selected_pnv_classes = pj_user_input["CLASS_SELECTION"]
 
-        self.save_figures = user_input['SAVE_FIGURE']
+        self.selected_year = tb_user_input['SELECT_YEAR']
+        self.selected_rcp = tb_user_input['SELECT_RCP']
+        self.selected_agg_lvl = tb_user_input['SELECT_AGG_LVL']
+        self.selected_iso = tb_user_input['SELECT_ISO']
+        self.rel_val_tolerance = tb_user_input['REL_VAL_TOLERANCE']
+        self.merge_agri_data = tb_user_input['MERGE_AGRI_DATA']
+
+        self.save_figures = tb_user_input['SAVE_FIGURE']
 
         self.input_folder = INPUT_RAW_DATA_PATH
         self.output_folder = OUTPUT_PATH
-        self.output_name = user_input['OUTPUT_NAME']
+        self.output_name = tb_user_input['OUTPUT_NAME']
 
         self.pnv_raw_data = self.readin_pnv_data()
         self.geo_data = self.readin_geo_data()
-        self.fontsize = self.define_format(paper_format=user_input['PAPER_FORMAT'])
-        self.color_palette = self.define_color_palette(selected_pnv_classes=user_input['SELECT_PNV_CLASS'])
+        self.fontsize = self.define_format(paper_format=tb_user_input['PAPER_FORMAT'])
+        self.color_palette = self.define_color_palette(selected_pnv_classes=tb_user_input['SELECT_PNV_CLASS'])
 
         self.pnv_data_extrapolated = {}
         self.pnv_forest_data_raw = {}
