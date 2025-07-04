@@ -24,9 +24,37 @@ class PotentialNaturalVegetationArea(Enum):
 
 
 class HildaLandUseClasses(Enum):
-    other_lu_classes = {11: "urban",
+    # For HILDA+ v1.0 (activate if HILDA+ v1.0 is used)
+    # Uncomment additional land use classes to allow for afforestation in these land use types.
+    """other_lu_classes = {00: "ocean",
+                        11: "urban",
                         22: "cropland",
-                        33: "pasture/rangeland"}
+                        33: "pasture/rangeland",
+                        44: "forest",
+                        # 55: "unmanaged grass/shrubland", (potential afforestation only on this land use type)
+                        66: "sparse/no vegetation",
+                        77: "water",
+                        99: "no data"}"""
+
+    # For HILDA+ v2.0 (activate if HILDA+ v2.0 is used)
+    # Uncomment additional land use classes to allow for afforestation in these land use types.
+    other_lu_classes = {00: "ocean",
+                        11: "urban",
+                        22: "annual crops",
+                        23: "tree crops",
+                        24: "agroforestry",
+                        33: "pasture/rangeland",
+                        40: "forest (unknown/other)",
+                        41: "forest (evergreen, needle leaf)",
+                        42: "forest (evergreen, broad leaf)",
+                        43: "forest (deciduous, needle leaf)",
+                        44: "forest (deciduous, broad leaf)",
+                        45: "forest (mixed)",
+                        # 55: "unmanaged grass/shrubland", (potential afforestation only on this land use type)
+                        66: "sparse/no vegetation",
+                        77: "water",
+                        99: "no data"
+                        }
 
 
 class Coordinates(Enum):
