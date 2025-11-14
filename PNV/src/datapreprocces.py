@@ -287,3 +287,72 @@ def merge_with_windowing(forest_raster_path, agri_raster_path, merged_raster_pat
     if zipped_data:
         zip_epsg_reproject(merged_raster_path)
 
+
+def intersect_with_windowing(ref_raster_path, sc_raster_path, output_raster_path, zipped_data, selected_pnv_classes,
+                             chunk_size=512):
+    """
+    Intersects additional afforestation maps to identify area gains and losses across the RCP scenario and time steps
+    :param ref_raster_path: Path to the reference raster file.
+    :param sc_raster_path: Path to the scenario raster file.
+    :param output_raster_path: Path to the output raster file.
+    :param zipped_data: Flag to control if zipped forest data is used.
+    :param selected_pnv_classes: Number of selected pnv classes.
+    :param chunk_size: Chunk size in bytes.
+
+    """
+    if selected_pnv_classes == 6:
+        filter_forest_class = PotentialNaturalVegetationArea.forest_classes_6.value
+        filter_forest_class = list(filter_forest_class.keys())
+    if selected_pnv_classes == 20:
+        filter_forest_class = PotentialNaturalVegetationArea.forest_classes_20.value
+        filter_forest_class = list(filter_forest_class.keys())
+
+    with rasterio.open(ref_raster_path) as ref_src, rasterio.open(sc_raster_path) as sc_src:
+        assert ref_src.width == sc_src.width and ref_src.height == sc_src.height, "Raster dimensions do not match"
+        assert ref_src.crs == sc_src.crs, "Raster CRS do not match"
+        assert ref_src.transform == sc_src.transform, "Raster transforms do not match"
+
+        # Prepare output RGB GeoTIFF
+        profile = ref_src.profile
+        profile.update({
+            'count': 1,
+            'dtype': 'uint8',
+            'driver': 'GTiff',
+            'compress': 'lzw'
+        })
+
+        with rasterio.open(output_raster_path, 'w', **profile) as dst:
+            for i in range(0, ref_src.height, chunk_size):
+                for j in range(0, ref_src.width, chunk_size):
+                    # Define window dimensions (prevent out-of-bound)
+                    h = min(chunk_size, ref_src.height - i)
+                    w = min(chunk_size, ref_src.width - j)
+                    window = rasterio.windows.Window(j, i, w, h)
+
+                    # Read windows
+                    chunk_ref = ref_src.read(1, window=window)
+                    chunk_sc = sc_src.read(1, window=window)
+
+                    # Convert to binary forest masks (1 = forest, 0 = non-forest)
+                    # TODO change following lines to track gains and losses within forest types
+                    forest_mask_ref = np.isin(chunk_ref, filter_forest_class).astype(np.uint8)
+                    forest_mask_sc = np.isin(chunk_sc, filter_forest_class).astype(np.uint8)
+
+                    # Initialize output chunk
+                    out_chunk = np.zeros((h, w), dtype=np.uint8)
+
+                    # Assign classes:
+                    # 1: Gain (non-forest → forest)
+                    out_chunk[np.logical_and(forest_mask_ref == 0, forest_mask_sc == 1)] = 1
+
+                    # 2: Loss (forest → non-forest)
+                    out_chunk[np.logical_and(forest_mask_ref == 1, forest_mask_sc == 0)] = 2
+
+                    # 3: Stable (forest → forest)
+                    out_chunk[np.logical_and(forest_mask_ref == 1, forest_mask_sc == 1)] = 3
+
+                    # Write result to output raster
+                    dst.write(out_chunk, 1, window=window)
+    if zipped_data:
+        zip_epsg_reproject(output_raster_path)
+
