@@ -6,7 +6,7 @@ labels_6 = [
 ]
 
 colors_6_forest = ['white', '#1b7837', '#2a7c8e', '#e6c84b']
-labels_6_forest = [ 'NA', 'Tropical-subtropical forest biome', 'Temperate-boreal forests and woodlands biome',
+labels_6_forest = ['NA', 'Tropical-subtropical forest biome', 'Temperate-boreal forests and woodlands biome',
                    'Shrublands and shrubby woodland biome']
 
 colors_20 = [
@@ -32,3 +32,6 @@ labels_20_forest = ['NA', 'Cold deciduous forest', 'Cold evergreen needleleaf fo
                     'Tropical deciduous broadleaf forest and woodland', 'Tropical evergreen broadleaf forest',
                     'Tropical semi-evergreen broadleaf forest', 'Warm-temperate evergreen broadleaf and mixed forest',
                     'Xerophytic woods/scrub']
+
+colors_gains_losses = ['white', '#508669', '#AC5EB9', '#938274']  # #FEFBB9 (light yellow); #E9EB87 (darker yellow); #E0CA3C (dark yellow)
+labels_gains_losses = ['NA', 'gains', 'losses', 'stable']
