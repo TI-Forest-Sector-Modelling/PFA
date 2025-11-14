@@ -356,3 +356,45 @@ def intersect_with_windowing(ref_raster_path, sc_raster_path, output_raster_path
     if zipped_data:
         zip_epsg_reproject(output_raster_path)
 
+
+def shp_to_tif(input_shp_path: str, output_tif_path: str, attribute: str, resolution: float):
+    """
+    Convert a shapefile to a GeoTIFF raster.
+    :param input_shp_path: Path of the input shapefile.
+    :param output_tif_path: Path of the output GeoTIFF raster.
+    :param attribute: Name of the attribute column.
+    :param resolution: Resolution in meters.
+    """
+    gdf = gpd.read_file(input_shp_path)
+    gdf = gdf.to_crs("EPSG:4326")
+
+    gdf = gdf.explode(index_parts=True).reset_index(drop=True)
+    gdf['geometry'] = gdf.buffer(0)
+
+    minx, miny, maxx, maxy = gdf.total_bounds
+    width = int((maxx - minx) / resolution)
+    height = int((maxy - miny) / resolution)
+    transform = from_bounds(minx, miny, maxx, maxy, width, height)
+
+    shapes = ((geom, value) for geom, value in zip(gdf.geometry, gdf[attribute]))
+
+    raster = rasterize(
+        shapes=shapes,
+        out_shape=(height, width),
+        transform=transform,
+        fill=0,
+        dtype='int32'
+    )
+
+    with rasterio.open(
+            output_tif_path,
+            'w',
+            driver='GTiff',
+            height=height,
+            width=width,
+            count=1,
+            dtype=raster.dtype,
+            crs='EPSG:4326',
+            transform=transform,
+    ) as dst:
+        dst.write(raster, 1)
