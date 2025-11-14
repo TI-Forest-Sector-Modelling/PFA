@@ -9,6 +9,7 @@ USER_INPUT = {
     'YEAR_AGRI_DATA': 2020,  # Options: 2015, 2020 (From HILDA+ v2.0 Winkler et al. 2025)
     'GENERATE_FIG': True,
     'GENERATE_GIF': True
+    'CALC_GAIN_LOSS': True
 }
 
 SRC_CRS = 'EPSG:4326'
