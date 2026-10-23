@@ -6,6 +6,9 @@ USER_INPUT = {
     'PLOT_DOWNSCALE_FACTOR': 4,  # Factor to downscale plotted world maps (no downscale == 1)
     'ZIPPED_DATA': True,
     'MERGE_AGRI_DATA': False
+    'MERGE_AGRI_DATA': True,
+    'YEAR_AGRI_DATA': 2020,  # Options: 2015, 2020 (From HILDA+ v2.0 Winkler et al. 2025)
+    'GENERATE_FIG': True,
 }
 
 SRC_CRS = 'EPSG:4326'
