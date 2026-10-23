@@ -5,6 +5,7 @@ import datetime as dt
 import pickle
 from pathlib import Path
 import os.path
+from PIL import Image
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -671,6 +672,44 @@ class PnvDataAnalysis:
                 fig_name = f"{self.current_dt}_world_map_{self.output_name}"
             plt.savefig(f"{self.output_folder}\\{fig_name}.png", dpi=300, bbox_inches='tight')
 
+    def generate_gif(self):
+        """
+        Generates a gif file with the latest produced maps.
+        """
+        for rcp in self.selected_rcp:
+            if self.merge_agri_data:
+                output_gif = f'Land_use_animation_pnv{self.selected_pnv_classes}_{rcp}_merged.gif'
+                if self.selected_pnv_classes == 20:
+                    filename_hist = f'biome6k.hcl_c_1km_a_19790101_merged.png'
+                    filename = f'biome6k.hcl.{rcp}*_merged.png'
+                else:
+                    filename_hist = f'iucn.hcl_c_1km_a_19790101_merged.png'
+                    filename = f'iucn.hcl.{rcp}*_merged.png'
+            else:
+                output_gif = f'Land_use_animation_pnv{self.selected_pnv_classes}_{rcp}.gif'
+                if self.selected_pnv_classes == 20:
+                    filename_hist = f'biome6k.hcl_c_1km_a_19790101.png'
+                    filename = f'biome6k.hcl.{rcp}*.png'
+                else:
+                    filename_hist = f'iucn.hcl_c_1km_a_19790101.png'
+                    filename = f'iucn.hcl.{rcp}*.png'
+            try:
+                output_gif_path = Path(os.path.abspath(OUTPUT_PATH)) / Path(output_gif)
+                filename_hist = Path(os.path.abspath(OUTPUT_PATH)) / Path(filename_hist)
+                filename_path = [filename_hist] + [f for f in Path(os.path.abspath(OUTPUT_PATH)).glob(filename)]
+                images = [Image.open(img) for img in filename_path]
+                images[0].save(
+                    output_gif_path,
+                    save_all=True,
+                    append_images=images[1:],
+                    duration=500,  # milliseconds per frame, adjust speed here
+                    loop=0  # 0 means loop forever
+                )
+
+            except ValueError:
+                self.logger.info("No files found for the selected PNV classes. Please check the output folder or rerun the"
+                                 " main application")
+
     def toolbox_plot(self):
         """
         Bundles and executes all functions to process and visualize the data based on the user input.
@@ -688,6 +727,9 @@ class PnvDataAnalysis:
                            )
         self.logger.info(f"PNV data analysis completed")
 
+    def toolbox_gif(self):
+        self.generate_gif()
+
 
 if __name__ == "__main__":
 
@@ -699,13 +741,11 @@ if __name__ == "__main__":
                                   aggregate_forest=False  # options: True or False
                                   )
 
-    pnv_analysis.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
-                               winkel_reproject=False,
-                               dissolve_map_regions=True
-                               )
         pnv_analysis.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
                                    winkel_reproject=False,
                                    dissolve_map_regions=True
                                    )
+    if USER_INPUT['GENERATE_GIF']:
+        pnv_analysis.generate_gif()
     pnv_analysis.logger.info(f"PNV data analysis completed")
 
