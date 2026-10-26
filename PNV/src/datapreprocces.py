@@ -4,6 +4,8 @@ import os
 import zipfile
 from tqdm import tqdm
 import numpy as np
+import glob
+from pathlib import Path
 
 from PNV.user_input.default_parameters import USER_INPUT
 from PNV.src.defines import PotentialNaturalVegetationArea, HildaLandUseClasses
@@ -62,7 +64,7 @@ def zip_epsg_reproject(output_tif: str):
         pass
 
 
-def process_all_files(input_dir: str, output_dir: str, src_crs: str, dst_crs: str):
+def process_all_files(self, input_dir: str, output_dir: str, src_crs: str, dst_crs: str):
     """
     Copies saved tif files in the preprocessed directory. Skips tif files when the name is already available in the
     preprocessed directory.
@@ -78,15 +80,24 @@ def process_all_files(input_dir: str, output_dir: str, src_crs: str, dst_crs: st
         print(f"Input directory {input_dir} does not exist.")
         return
 
-    all_files = [
-        filename for filename in os.listdir(input_dir)
-        if filename.lower().endswith(".tif") and os.path.isfile(os.path.join(input_dir, filename))
-    ]
-    print(f"Total .tif files to process: {len(all_files)}")
+    if self.class_selection == 6:
+        pattern = os.path.join(input_dir, 'biomes_iucn.hcl*.tif')
+    elif self.class_selection == 20:
+        pattern = os.path.join(input_dir, 'biomes_biome6k.hcl*.tif')
+    else:
+        raise ValueError("Invalid class selection. Must be 6 or 20.")
 
-    for filename in tqdm(all_files, desc="Processing .tif raw files"):
-        input_path = os.path.join(input_dir, filename)
+    all_tif_files = glob.glob(pattern)
+
+    if self.merge_data:
+        pattern_land_use_map = os.path.join(input_dir, f'hilda_plus_states_{self.year_agri_data}_GLOB-v2_wgs84.tif')
+        all_tif_files.append(pattern_land_use_map)
+    print(f"Total .tif files to process: {len(all_tif_files)}")
+
+    for filename in tqdm(all_tif_files, desc="Processing .tif raw files"):
+        input_path = filename
         output_filename = filename.replace('4326', '8857')
+        output_filename = Path(output_filename).name
         output_path = os.path.join(output_dir, output_filename)
 
         if os.path.exists(output_path):

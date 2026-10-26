@@ -6,7 +6,7 @@ labels_6 = [
 ]
 
 colors_6_forest = ['white', '#1b7837', '#2a7c8e', '#e6c84b']
-labels_6_forest = [ 'NA', 'Tropical-subtropical forest biome', 'Temperate-boreal forests and woodlands biome',
+labels_6_forest = ['NA', 'Tropical-subtropical forest biome', 'Temperate-boreal forests and woodlands biome',
                    'Shrublands and shrubby woodland biome']
 
 colors_20 = [
