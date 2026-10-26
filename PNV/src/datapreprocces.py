@@ -51,7 +51,7 @@ def zip_epsg_reproject(output_tif: str):
         return
 
     output_tif = output_tif[:-4]
-    output_zip = output_tif.split('\\')[-1]
+    output_zip = os.path.basename(output_tif)
     zipfile.ZipFile(
         f'{output_tif}.zip', 'w', zipfile.ZIP_DEFLATED).write(f'{output_tif}.tif',
                                                               arcname=f'{output_zip}.tif')

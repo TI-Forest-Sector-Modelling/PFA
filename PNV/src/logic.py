@@ -124,6 +124,7 @@ class ProcessingArea:
                 pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.tif')
 
         all_tif_files = glob.glob(pattern)
+        all_tif_files = [file for file in all_tif_files if 'intersected' not in file.lower()]
 
         if self.class_selection == 6:
             ref_file_list = [file for file in all_tif_files if 'iucn' and '1979' in file.lower()]
@@ -556,7 +557,7 @@ class ProcessingArea:
             for sc_data in tqdm(sc_file_list, desc="Calculating area gains and losses"):
                 sc_data_abs = os.path.abspath(sc_data)
                 sc_tif_inside_zip = self.extract_tif_from_zip(sc_data_abs)
-                folder_name = os.path.basename(sc_data)[:-11]
+                folder_name = os.path.basename(sc_data)[:-4]
                 output_tif = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected.tif")
                 output_tif_zip = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected.zip")
 

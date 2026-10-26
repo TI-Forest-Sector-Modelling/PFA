@@ -518,7 +518,7 @@ class PnvDataAnalysis:
                 fig_name = f"{self.current_dt}_bar_plot_{self.output_name}_merged"
             else:
                 fig_name = f"{self.current_dt}_bar_plot_{self.output_name}"
-            plt.savefig(f"{self.output_folder}\\{fig_name}.png", dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(self.output_folder, f"{fig_name}.png"), dpi=300, bbox_inches='tight')
 
     def pnv_world_map(self, fig_option: str, winkel_reproject: bool, dissolve_map_regions: bool):
         """
@@ -670,7 +670,7 @@ class PnvDataAnalysis:
                 fig_name = f"{self.current_dt}_world_map_{self.output_name}_merged"
             else:
                 fig_name = f"{self.current_dt}_world_map_{self.output_name}"
-            plt.savefig(f"{self.output_folder}\\{fig_name}.png", dpi=300, bbox_inches='tight')
+            plt.savefig(os.path.join(self.output_folder, f"{fig_name}.png"), dpi=300, bbox_inches='tight')
 
 
     def generate_gif(self):
@@ -742,14 +742,11 @@ if __name__ == "__main__":
                                   aggregate_forest=False  # options: True or False
                                   )
 
-    pnv_analysis.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
+        pnv_analysis.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
                                winkel_reproject=False,
                                dissolve_map_regions=True
                                )
-        pnv_analysis.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
-                                   winkel_reproject=False,
-                                   dissolve_map_regions=True
-                                   )
+
     if USER_INPUT['GENERATE_GIF']:
         pnv_analysis.generate_gif()
     pnv_analysis.logger.info(f"PNV data analysis completed")
