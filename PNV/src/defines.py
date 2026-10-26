@@ -5,22 +5,56 @@ class PotentialNaturalVegetationArea(Enum):
     """
     Class holding information and classification about IUCN and biomes from Input data.
     """
-    forest_classes_6 = ["Tropical-subtropical forest biome",
-                        "Temperate-boreal forests and woodlands biome",
-                        "Shrublands and shrubby woodland biome"]
-    forest_classes_20 = ["Cold deciduous forest",
-                         "Cold evergreen needleleaf forest",
-                         "Cool evergreen needleleaf forest",
-                         "Cool mixed forest",
-                         "Cool temperate rainforest",
-                         "Temperate deciduous broadleaf forest",
-                         "Temperate evergreen needleleaf open woodland",
-                         "Temperate sclerophyll woodland and shrubland",
-                         "Tropical deciduous broadleaf forest and woodland",
-                         "Tropical evergreen broadleaf forest",
-                         "Tropical semi-evergreen broadleaf forest",
-                         "Warm-temperate evergreen broadleaf and mixed forest",
-                         "Xerophytic woods/scrub"]
+    forest_classes_6 = {1: "Tropical-subtropical forest biome",
+                        2: "Temperate-boreal forests and woodlands biome",
+                        3: "Shrublands and shrubby woodland biome"}
+    forest_classes_20 = {1: "Cold deciduous forest",
+                         2: "Cold evergreen needleleaf forest",
+                         3: "Cool evergreen needleleaf forest",
+                         4: "Cool mixed forest",
+                         5: "Cool temperate rainforest",
+                         12: "Temperate deciduous broadleaf forest",
+                         13: "Temperate evergreen needleleaf open woodland",
+                         14: "Temperate sclerophyll woodland and shrubland",
+                         15: "Tropical deciduous broadleaf forest and woodland",
+                         16: "Tropical evergreen broadleaf forest",
+                         18: "Tropical semi-evergreen broadleaf forest",
+                         19: "Warm-temperate evergreen broadleaf and mixed forest",
+                         20: "Xerophytic woods/scrub"}
+
+
+class HildaLandUseClasses(Enum):
+    # For HILDA+ v1.0 (activate if HILDA+ v1.0 is used)
+    # Uncomment additional land use classes to allow for afforestation in these land use types.
+    """other_lu_classes = {00: "ocean",
+                        11: "urban",
+                        22: "cropland",
+                        33: "pasture/rangeland",
+                        44: "forest",
+                        # 55: "unmanaged grass/shrubland", (potential afforestation only on this land use type)
+                        66: "sparse/no vegetation",
+                        77: "water",
+                        99: "no data"}"""
+
+    # For HILDA+ v2.0 (activate if HILDA+ v2.0 is used)
+    # Uncomment additional land use classes to allow for afforestation in these land use types.
+    other_lu_classes = {00: "ocean",
+                        11: "urban",
+                        22: "annual crops",
+                        23: "tree crops",
+                        24: "agroforestry",
+                        33: "pasture/rangeland",
+                        40: "forest (unknown/other)",
+                        41: "forest (evergreen, needle leaf)",
+                        42: "forest (evergreen, broad leaf)",
+                        43: "forest (deciduous, needle leaf)",
+                        44: "forest (deciduous, broad leaf)",
+                        45: "forest (mixed)",
+                        # 55: "unmanaged grass/shrubland", (potential afforestation only on this land use type)
+                        66: "sparse/no vegetation",
+                        77: "water",
+                        99: "no data"
+                        }
 
 
 class Coordinates(Enum):
