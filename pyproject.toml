@@ -53,7 +53,7 @@ Issues = "https://github.com/TI-FSM/me/spam/issues"
 Changelog = "https://github.com/TI-FSM/me/spam/blob/master/CHANGELOG.md"
 
 [project.scripts]
-run_pnv = "PNV.src.main.main: main"
+pfa = "PNV.cli.cli:cli"
 
 [tool.setuptools]
 include-package-data = true
