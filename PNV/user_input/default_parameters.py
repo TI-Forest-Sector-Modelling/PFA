@@ -1,7 +1,7 @@
 from PNV.src.defines import ParamNames
 
 USER_INPUT = {
-    ParamNames.process_data.value: False,  # False: no preprocessing and transformation of coordinate system; True: transforming
+    ParamNames.process_data.value: True,  # False: no preprocessing and transformation of coordinate system; True: transforming
     # coordinate system to another
     ParamNames.class_selection.value: 6,  # 6 or 20 based on choosing hard classes
     ParamNames.plot_maps.value: True,
