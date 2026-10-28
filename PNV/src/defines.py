@@ -123,7 +123,7 @@ class ParamNames(Enum):
     year_agri_data = "year_agri_data"
     generate_fig = "generate_fig"
     generate_gif = "generate_gif"
-    calc_gain_loss = "clac_gain_loss"
+    calc_gain_loss = "calc_gain_loss"
 
     select_year = "select_year"
     select_rcp = "select_rcp"
