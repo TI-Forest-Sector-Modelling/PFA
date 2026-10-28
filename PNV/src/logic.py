@@ -17,33 +17,39 @@ from shapely.geometry import mapping
 from tqdm import tqdm
 
 from PNV.src.datamanager import (colors_6, labels_6, colors_6_forest, labels_6_forest, colors_20, labels_20,
-                                 colors_20_forest, labels_20_forest)
-from PNV.src.datapreprocces import (process_all_files, reproject_and_save, merge_with_windowing)
-from PNV.user_input.default_parameters import USER_INPUT, TOOLBOX_INPUT, SRC_CRS, DST_CRS
+                                 colors_20_forest, labels_20_forest, colors_gains_losses, labels_gains_losses)
+from PNV.src.datapreprocces import (process_all_files, reproject_and_save, merge_with_windowing,
+                                    intersect_with_windowing_changes, intersect_with_windowing_constant)
+from PNV.user_input.default_parameters import SRC_CRS, DST_CRS
 from PNV.src.base_logger import get_logger
 from PNV.paths.paths import (INPUT_RAW_DATA_PATH, PREPROCESSED_DATA_PATH, OUTPUT_PATH, HILDAv2_DATA_2015_PATH,
-                             HILDAv2_DATA_2020_PATH, HILDAv2_DATA_2015_NEW_CRD_PATH, HILDAv2_DATA_2020_NEW_CRD_PATH)
-
+                             HILDAv2_DATA_2020_PATH, HILDAv2_DATA_2015_NEW_CRD_PATH, HILDAv2_DATA_2020_NEW_CRD_PATH,
+                             HILDAv2_DATA_2015_NEW_CRD_ZIP_PATH, HILDAv2_DATA_2020_NEW_CRD_ZIP_PATH)
+from PNV.src.defines import ParamNames
 
 
 class ProcessingArea:
-    def __init__(self):
+    def __init__(self, pj_user_input):
         """
         Initialization of the class ProcessingArea. Read in and preprocess input file to calculate the country-specific
         area for different classes (IUCN and biomes).
+        :param pj_user_input: User input for the PFA project.
         """
         self.logger = get_logger(user_path=None)
         self.time_stamp = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
-        self.class_selection = USER_INPUT['CLASS_SELECTION']
-        self.zipped_data = USER_INPUT['ZIPPED_DATA']
-        self.merge_data = USER_INPUT['MERGE_AGRI_DATA']
-        self.year_agri_data = USER_INPUT['YEAR_AGRI_DATA']
+        self.pj_user_input = pj_user_input
+        self.class_selection = pj_user_input[ParamNames.class_selection.value]
+        self.zipped_data = pj_user_input[ParamNames.zipped_data.value]
+        self.process_data = pj_user_input[ParamNames.process_data.value]
+        self.merge_data = pj_user_input[ParamNames.merge_agri_data.value]
+        self.year_agri_data = pj_user_input[ParamNames.year_agri_data.value]
+        self.intersect_data = pj_user_input[ParamNames.calc_gain_loss.value]
 
         if self.class_selection not in [6, 20]:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
         self.logger.info(f"Class selection set to: {self.class_selection}")
 
-        if USER_INPUT['PROCESS_DATA']:
+        if self.process_data:
             self.logger.info(f"Processing data...")
             process_all_files(self, input_dir=INPUT_RAW_DATA_PATH, output_dir=PREPROCESSED_DATA_PATH,
                               src_crs=SRC_CRS, dst_crs=DST_CRS)
@@ -53,20 +59,30 @@ class ProcessingArea:
             self.readin_agri_data()
             self.merge_agri_data()
             self.logger.info(f"Data merging complete.")
+        if self.intersect_data:
+            self.calc_area_gain_loss()
+            self.calc_area_gain_loss_robust_time()
+            self.calc_area_gain_loss_robust_rcps()
+            self.calc_area_gain_loss_robust_overall()
+            self.plot_area_gain_loss()
 
-        self.tif_files = self.filter_tif_files_by_selection(merged_agri_data=self.merge_data)
+        self.tif_files = self.filter_tif_files_by_selection(data_path=PREPROCESSED_DATA_PATH,
+                                                            merged_agri_data=self.merge_data,
+                                                            intersected_data=self.intersect_data)
+
         self.logger.info(f"Found {len(self.tif_files)} relevant TIF files for class selection {self.class_selection}.")
 
         combined_df = self.process_files(self.tif_files, OUTPUT_PATH)
         self.save_results(combined_df)
 
-    def filter_tif_files_by_selection(self, merged_agri_data: bool):
+    def filter_tif_files_by_selection(self, data_path: str, merged_agri_data: bool, intersected_data: bool):
         """
         Filters the TIF files to match the selected class based on class_selection.
+        :param data_path: Path to the folder of TIF files to be selected.
         :param merged_agri_data: Flag to control if merged data are selected (True) or not (False).
+        :param intersected_data: Flag to control if intersected data are selected (True) or not (False).
         :return: List of filtered TIF files relevant to the selected class.
         """
-        data_path = PREPROCESSED_DATA_PATH
         if self.class_selection == 6:
             if self.zipped_data:
                 pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
@@ -88,12 +104,31 @@ class ProcessingArea:
         elif self.class_selection == 20:
             file_list = [file for file in all_tif_files if 'biome6k' in file.lower()]
 
-        if merged_agri_data:
-            file_list = [file for file in file_list if 'merged' in file.lower()]
+        if merged_agri_data or intersected_data:
+            file_list = [file for file in file_list if ('intersected' in file.lower()) or ('merged' in file.lower())]
+
+            if intersected_data:  # intersected only possible with merged activated
+                file_list = [file for file in file_list if 'intersected' in file.lower()]
+            else:  # merged possible without intersected activated
+                file_list = [file for file in file_list if 'merged' in file.lower()]
+
         else:
-            file_list = [file for file in file_list if 'merged' not in file.lower()]
+            file_list = [file for file in file_list if ('merged' not in file.lower()) and
+                         ('intersected' not in file.lower())]
 
         return file_list
+
+    def group_tif_files(self, file_list: list, shared_element: str):
+        """
+        Groups TIF file based on shared element for afforestation area gains and losses analysis
+        :param file_list: List of TIF files to be processed.
+        :param shared_element: String shared by the paires that are formed.
+        :return: List of filtered TIF files paires relevant to the selected class.
+        """
+        grouped_paths = [[p for p in file_list if element in p] for element in shared_element]
+        grouped_paths = [sorted(group) for group in grouped_paths]
+
+        return grouped_paths
 
     def extract_tif_from_zip(self, zip_path):
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
@@ -102,32 +137,87 @@ class ProcessingArea:
                     return file
         raise FileNotFoundError(f'No tif file in {zip_path} found')
 
-    def plot_tif(self, tif_file: str, output_path: str):
+    def set_zipped_tif_path(self, file_list):
+        """
+        Set the path of the zipped tif file based on file list
+        :param file_list: List of file paths.
+        """
+        list_data_abs = [os.path.abspath(x) for x in file_list]
+        list_tif_inside_zip = [self.extract_tif_from_zip(x) for x in list_data_abs]
+        if os.name == "nt":  # Windows
+            list_zipped_data = [f"zip+file://{x}!{y}" for x, y in zip(list_data_abs, list_tif_inside_zip)]
+        else:  # macOS/Linux
+            list_zipped_data = [f"/vsizip//{x}/{y}" for x, y in zip(list_data_abs, list_tif_inside_zip)]
+
+        return list_zipped_data
+
+    def split_ref_and_sc_map(self):
+        """
+        Splits the reference and the scenario maps for intersection analysis
+        :return: Two lists, one of reference maps and one of scenario maps.
+        """
+        data_path = PREPROCESSED_DATA_PATH
+        if self.class_selection == 6:
+            if self.zipped_data:
+                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
+            else:
+                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.tif')
+        elif self.class_selection == 20:
+            if self.zipped_data:
+                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.zip')
+            else:
+                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.tif')
+
+        all_tif_files = glob.glob(pattern)
+
+        if self.class_selection == 6:
+            ref_file_list = [file for file in all_tif_files if 'iucn' and '1979' in file.lower()]
+            sc_file_list = [file for file in all_tif_files if 'iucn' in file.lower() and '1979' not in file.lower()]
+        elif self.class_selection == 20:
+            ref_file_list = [file for file in all_tif_files if 'biome6k' and '1979' in file.lower()]
+            sc_file_list = [file for file in all_tif_files if 'biome6k' in file.lower() and '1979' not in file.lower()]
+
+        if self.merge_data:
+            ref_file_list = [file for file in ref_file_list if 'merged' in file.lower()]
+            sc_file_list = [file for file in sc_file_list if 'merged' in file.lower()]
+        else:
+            ref_file_list = [file for file in ref_file_list if 'merged' not in file.lower()]
+            sc_file_list = [file for file in sc_file_list if 'merged' not in file.lower()]
+
+        return ref_file_list, sc_file_list
+
+    def plot_tif(self, tif_file: str, output_path: str, intersected_data: bool):
         """
         Transforms a TIFF file into a PNG format and saves it to the specified output path.
         :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
         :param output_path: String of the output folder.
+        :param intersected_data: Flag to control if intersected data are selected (True) or not (False).
         """
-        if self.class_selection == 20:
-            if self.merge_data:
-                colors = colors_20_forest
-                labels = labels_20_forest
-                ncols = 4
-            else:
-                colors = colors_20
-                labels = labels_20
-                ncols = 4
-        elif self.class_selection == 6:
-            if self.merge_data:
-                colors = colors_6_forest
-                labels = labels_6_forest
-                ncols = 1
-            else:
-                colors = colors_6
-                labels = labels_6
-                ncols = 2
+        if intersected_data:
+            colors = colors_gains_losses
+            labels = labels_gains_losses
+            ncols = 3
         else:
-            raise ValueError("Invalid number of classes. Must be 6 or 20.")
+            if self.class_selection == 20:
+                if self.merge_data:
+                    colors = colors_20_forest
+                    labels = labels_20_forest
+                    ncols = 4
+                else:
+                    colors = colors_20
+                    labels = labels_20
+                    ncols = 4
+            elif self.class_selection == 6:
+                if self.merge_data:
+                    colors = colors_6_forest
+                    labels = labels_6_forest
+                    ncols = 1
+                else:
+                    colors = colors_6
+                    labels = labels_6
+                    ncols = 2
+            else:
+                raise ValueError("Invalid number of classes. Must be 6 or 20.")
 
         cmap = mcolors.ListedColormap(colors)
 
@@ -142,10 +232,10 @@ class ProcessingArea:
             tif_file = os.path.abspath(tif_file)
 
         window_size = 512
-        downscale_factor = USER_INPUT['PLOT_DOWNSCALE_FACTOR']
+        downscale_factor = self.pj_user_input[ParamNames.plot_downscale_factor.value]
         with rasterio.open(tif_file) as src:
             height, width = src.height, src.width
-            img_full = np.zeros((height, width), dtype=src.dtypes[0])
+            # img_full = np.zeros((height, width), dtype=src.dtypes[0])
             unique_values_set = set()
 
             for row in range(0, height, window_size):
@@ -153,8 +243,10 @@ class ProcessingArea:
                     w = min(window_size, width - col)
                     h = min(window_size, height - row)
                     window = rasterio.windows.Window(col, row, w, h)
-                    img_full[row:row + h, col:col + w] = src.read(1, window=window)
-                    unique_values_set.update(np.unique(src.read(1, window=window)))
+                    block = src.read(1, window=window)
+                    unique_values_set.update(np.unique(block))
+                    # img_full[row:row + h, col:col + w] = src.read(1, window=window)
+                    # unique_values_set.update(np.unique(src.read(1, window=window)))
 
             unique_values = np.array(sorted(unique_values_set))
             unique_values = unique_values[~np.isnan(unique_values)]
@@ -186,19 +278,24 @@ class ProcessingArea:
                            transform=original_crs,
                            interpolation='nearest')
             ax.set_global()
-            ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())
+            ax.set_extent([-180, 180, -60, 90], crs=ccrs.PlateCarree())  # Only North America: [-170, -50, 15, 75]
             ax.coastlines()
             ax.add_feature(cfeature.BORDERS, linewidth=0.3)
 
             colors = {biome: colors[1:][i] for i, biome in enumerate(labels[1:])}
+            if intersected_data:
+                header_region = []
+                bbox_position = (0.5, -0.15)
+            else:
+                header_region = [mpatches.Patch(facecolor="none", edgecolor="none", label="Biomes")]
+                bbox_position = (0.5, -0.3)
 
-            header_region = [mpatches.Patch(facecolor="none", edgecolor="none", label="Biomes")]
             region_patches = [mpatches.Patch(color=color, label=biome) for biome, color in colors.items()]
             legend_patches = header_region + region_patches
 
             legend = ax.legend(handles=legend_patches,
                                loc="lower center",
-                               bbox_to_anchor=(0.5, -0.3),
+                               bbox_to_anchor=bbox_position,
                                ncols=ncols,
                                fontsize=12)
 
@@ -239,21 +336,26 @@ class ProcessingArea:
             self.logger.info(f"Total area (km^2): {total_area_km2}")
             return total_area_km2
 
-    def count_pixels_in_tif(self, tif_file: str):
+    def count_pixels_in_tif(self, tif_file: str, intersected_data: bool):
         """
         Calculates the number of pixel in the TIFF file for each category of vegetation area and provides the
         corresponding percentage distribution.
         :param tif_file: Reads a TIFF file based on the number of vegetation classes (either 6 or 20).
+        :param intersected_data: Flag to control if intersected data are selected (True) or not (False).
         returns: Dataframe with km² for different classes.
         """
-        if self.class_selection == 20:
-            colors = colors_20
-            labels = labels_20
-        elif self.class_selection == 6:
-            colors = colors_6
-            labels = labels_6
+        if intersected_data:
+            colors = colors_gains_losses
+            labels = labels_gains_losses
         else:
-            raise ValueError("Invalid class selection. Must be 6 or 20.")
+            if self.class_selection == 20:
+                colors = colors_20
+                labels = labels_20
+            elif self.class_selection == 6:
+                colors = colors_6
+                labels = labels_6
+            else:
+                raise ValueError("Invalid class selection. Must be 6 or 20.")
 
         if self.zipped_data:
             tif_inside_zip = self.extract_tif_from_zip(tif_file)
@@ -296,20 +398,23 @@ class ProcessingArea:
 
             return results_df
 
-    def get_pixel_values_by_country(self, raster_file: pd.DataFrame):
+    def get_pixel_values_by_country(self, raster_file: pd.DataFrame, intersected_data: bool):
         """
         Calculates the pixels of the TIFF files for each category of vegetation area and each country on a global
         level.
-        :params rater_file: Dataframe naturalearth_lowres from the geopandas package.
+        :param raster_file: Dataframe naturalearth_lowres from the geopandas package.
+        :param intersected_data: Flag controling if intersected maps (gain and losses) are plotted
         returns: Dataframe with km² for every country.
         """
-        num_classes = self.class_selection
-        if num_classes == 20:
-            labels = labels_20
-        elif num_classes == 6:
-            labels = labels_6
+        if intersected_data:
+            labels = labels_gains_losses
         else:
-            raise ValueError("Invalid number of classes. Must be 6 or 20.")
+            if self.class_selection == 20:
+                labels = labels_20
+            elif self.class_selection == 6:
+                labels = labels_6
+            else:
+                raise ValueError("Invalid class selection. Must be 6 or 20.")
 
         world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
         world = world.to_crs("EPSG:8857")
@@ -377,21 +482,24 @@ class ProcessingArea:
 
             self.logger.info(f"Processing {tif_file_path} with sheet name {sheet_name}")
 
-            if USER_INPUT['PLOT_MAPS']:
-                if self.merge_data:
-                    plot_name = f"{sheet_name}_merged.png"
+            if self.pj_user_input[ParamNames.plot_maps.value]:
+                if self.merge_data or self.intersect_data:
+                    if self.intersect_data:
+                        plot_name = f"{sheet_name}_intersect.png"
+                    else:
+                        plot_name = f"{sheet_name}_merged.png"
                 else:
                     plot_name = f"{sheet_name}.png"
                 plot_path = os.path.join(output_dir, plot_name)
-                self.plot_tif(tif_file_path, plot_path)
+                self.plot_tif(tif_file=tif_file_path, output_path=plot_path, intersected_data=self.intersect_data)
 
             area = self.calculate_area(tif_file_path)
             self.logger.info(f"Calculated area for {tif_file_path}: {area} km^2")
 
-            pixel_count_df = self.count_pixels_in_tif(tif_file_path)
+            pixel_count_df = self.count_pixels_in_tif(tif_file_path, intersected_data=self.intersect_data)
             self.logger.info(f"Pixel counts calculated for {tif_file_path}")
 
-            pixel_values_df = self.get_pixel_values_by_country(tif_file_path)
+            pixel_values_df = self.get_pixel_values_by_country(tif_file_path, intersected_data=self.intersect_data)
             pixel_values_df['Sheet Name'] = sheet_name
 
             combined_df = pd.concat([combined_df, pixel_values_df], ignore_index=True)
@@ -442,19 +550,27 @@ class ProcessingArea:
     def readin_agri_data(self):
         """
         Reads in the global land use dataset HILDA+ containing agricultural and urban land use data. The HILDA-dataset
-        is reprojected to match PNV from Bonanella
+        is reprojected to match PNV from Bonannella
         """
         self.logger.info(f"Merge forest and agricultural area data")
         if self.year_agri_data == 2015:
             agri_data_file = HILDAv2_DATA_2015_PATH
-            new_agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
+            if self.zipped_data:
+                new_agri_data_file = HILDAv2_DATA_2015_NEW_CRD_ZIP_PATH
+            else:
+                new_agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
         elif self.year_agri_data == 2020:
             agri_data_file = HILDAv2_DATA_2020_PATH
-            new_agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
+            if self.zipped_data:
+                new_agri_data_file = HILDAv2_DATA_2020_NEW_CRD_ZIP_PATH
+            else:
+                new_agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
         else:
             raise ValueError("Invalid year of HILDA data. Must be 2015 or 2020.")
 
-        data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
+        data_list = self.filter_tif_files_by_selection(data_path=PREPROCESSED_DATA_PATH,
+                                                       merged_agri_data=False,
+                                                       intersected_data=False)
 
         reproject_and_save(src_raster_path=agri_data_file,
                            output_path=new_agri_data_file,
@@ -464,16 +580,33 @@ class ProcessingArea:
 
     def merge_agri_data(self):
         """
-        Merges forest data from Bonanella with HILDA+ land use data.
+        Merges forest data from Bonannella with HILDA+ land use data.
         """
         self.logger.info(f"Merge forest and agricultural area data")
-        data_list = self.filter_tif_files_by_selection(merged_agri_data=False)
+        data_list = self.filter_tif_files_by_selection(data_path=PREPROCESSED_DATA_PATH,
+                                                       merged_agri_data=False,
+                                                       intersected_data=False)
         if self.year_agri_data == 2015:
-            agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
+            if self.zipped_data:
+                agri_data_file = HILDAv2_DATA_2015_NEW_CRD_ZIP_PATH
+            else:
+                agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
         elif self.year_agri_data == 2020:
-            agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
+            if self.zipped_data:
+                agri_data_file = HILDAv2_DATA_2020_NEW_CRD_ZIP_PATH
+            else:
+                agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
         else:
             raise ValueError("Invalid year of HILDA data. Must be 2015 or 2020.")
+
+        if self.zipped_data:
+            agri_data_file = os.path.abspath(agri_data_file)
+            agri_data_file_zip = self.extract_tif_from_zip(agri_data_file)
+            if os.name == "nt":  # Windows
+                agri_data_file = f"zip+file://{agri_data_file}!{agri_data_file_zip}"
+            else:  # macOS/Linux
+                agri_data_file = f"/vsizip//{agri_data_file}/{agri_data_file_zip}"
+
         for src_data in tqdm(data_list, desc="Merging TIFF files"):
             if self.zipped_data:
                 folder_name = os.path.basename(src_data)[:-4]
@@ -494,4 +627,146 @@ class ProcessingArea:
                                      merged_raster_path=src_data_merged,
                                      zipped_data=self.zipped_data,
                                      selected_pnv_classes=self.class_selection)
+
+    def calc_area_gain_loss(self):
+        """
+        Calculates afforestation area gains and losses between the historical afforestation areas (reference) and the
+        climate-sensitive afforestation areas (scenarios)
+        """
+        self.logger.info(f"Calculating area gains and losses between selected RCPs and historical reference")
+        ref_file_list, sc_file_list = self.split_ref_and_sc_map()
+        if self.zipped_data:
+            ref_data_abs = os.path.abspath(ref_file_list[0])
+            ref_tif_inside_zip = self.extract_tif_from_zip(ref_data_abs)
+            if os.name == "nt":  # Windows
+                ref_data = f"zip+file://{ref_data_abs}!{ref_tif_inside_zip}"
+            else:  # macOS/Linux
+                ref_data = f"/vsizip//{ref_data_abs}/{ref_tif_inside_zip}"
+
+            for sc_data in tqdm(sc_file_list, desc="Calculating area gains and losses"):
+                sc_data_abs = os.path.abspath(sc_data)
+                sc_tif_inside_zip = self.extract_tif_from_zip(sc_data_abs)
+                folder_name = os.path.basename(sc_data)[:-11]
+                output_tif = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected.tif")
+                output_tif_zip = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected.zip")
+
+                if os.name == "nt":  # Windows
+                    sc_data = f"zip+file://{sc_data_abs}!{sc_tif_inside_zip}"
+                else:  # macOS/Linux
+                    sc_data = f"/vsizip//{sc_data_abs}/{sc_tif_inside_zip}"
+
+                if not os.path.isfile(output_tif_zip):
+                    intersect_with_windowing_changes(ref_raster_path=ref_data,
+                                                     sc_raster_path=sc_data,
+                                                     output_raster_path=output_tif,
+                                                     zipped_data=self.zipped_data,
+                                                     selected_pnv_classes=self.class_selection)
+
+    def calc_area_gain_loss_robust_time(self):
+        """
+        Calculates afforestation area gains and losses between projection time steps
+        """
+        self.logger.info(f"Calculating time-robust area gains and losses")
+        sc_file_list = self.filter_tif_files_by_selection(data_path=PREPROCESSED_DATA_PATH,
+                                                          merged_agri_data=False,
+                                                          intersected_data=True)
+        sc_file_list = self.group_tif_files(file_list=sc_file_list, shared_element=["rcp26", "rcp45", "rcp85"])
+        if self.zipped_data:
+            for sc_data in tqdm(sc_file_list, desc="Calculating time-robust area gains and losses"):
+
+                zipped_data_path = self.set_zipped_tif_path(file_list=sc_data)
+
+                # Adapt if more time steps are integrated
+                sc_data_1 = zipped_data_path[0]
+                sc_data_2 = zipped_data_path[1]
+
+                folder_name = "_".join(os.path.basename(sc_data_1).split("_")[0:2])
+                output_tif = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected_time.tif")
+                output_tif_zip = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected_time.zip")
+
+                if not os.path.isfile(output_tif_zip):
+                    intersect_with_windowing_constant(raster_paths=[sc_data_1, sc_data_2],
+                                                      output_raster_path=output_tif,
+                                                      zipped_data=self.zipped_data,
+                                                      selected_pnv_classes=self.class_selection)
+
+    def calc_area_gain_loss_robust_rcps(self):
+        """
+        Calculates afforestation area gains and losses between RCP scenarios
+        """
+        self.logger.info(f"Calculating RCP-robust area gains and losses")
+        sc_file_list = self.filter_tif_files_by_selection(data_path=PREPROCESSED_DATA_PATH,
+                                                          merged_agri_data=False,
+                                                          intersected_data=True)
+        sc_file_list = self.group_tif_files(file_list=sc_file_list, shared_element=["2040", "2061"])
+        if self.zipped_data:
+            for sc_data in tqdm(sc_file_list, desc="Calculating RCP-robust area gains and losses"):
+
+                zipped_data_path = self.set_zipped_tif_path(file_list=sc_data)
+
+                # Adapt if more RCP scenarios are integrated
+                sc_data_1 = zipped_data_path[0]
+                sc_data_2 = zipped_data_path[1]
+                sc_data_3 = zipped_data_path[2]
+
+                path_elements = list(os.path.basename(sc_data_1).split("_"))
+                folder_name = "_".join([path_elements[0],
+                                        ".".join(path_elements[1].split('.')[0:2]),
+                                        path_elements[5],
+                                        path_elements[6]])
+                output_tif = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected_rcp.tif")
+                output_tif_zip = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected_rcp.zip")
+
+                if not os.path.isfile(output_tif_zip):
+                    intersect_with_windowing_constant(raster_paths=[sc_data_1, sc_data_2, sc_data_3],
+                                                      output_raster_path=output_tif,
+                                                      zipped_data=self.zipped_data,
+                                                      selected_pnv_classes=self.class_selection)
+
+    def calc_area_gain_loss_robust_overall(self):
+        self.logger.info(f"Calculating overall-robust area gains and losses")
+        sc_file_list = self.filter_tif_files_by_selection(data_path=PREPROCESSED_DATA_PATH,
+                                                          merged_agri_data=False,
+                                                          intersected_data=True)
+        sc_file_list = self.group_tif_files(file_list=sc_file_list, shared_element=["intersected_time"])
+
+        if self.zipped_data:
+            for sc_data in tqdm(sc_file_list, desc="Calculating overall-robust area gains and losses"):
+
+                zipped_data_path = self.set_zipped_tif_path(file_list=sc_data)
+
+                # Adapt if more RCP scenarios are integrated
+                sc_data_1 = zipped_data_path[0]
+                sc_data_2 = zipped_data_path[1]
+                sc_data_3 = zipped_data_path[2]
+
+                path_elements = list(os.path.basename(sc_data_1).split("_"))
+                folder_name = "_".join([path_elements[0],
+                                        ".".join(path_elements[1].split('.')[0:2])])
+
+                output_tif = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected_overall.tif")
+                output_tif_zip = os.path.join(PREPROCESSED_DATA_PATH, f"{folder_name}_intersected_overall.zip")
+
+                if not os.path.isfile(output_tif_zip):
+                    intersect_with_windowing_constant(raster_paths=[sc_data_1, sc_data_2, sc_data_3],
+                                                      output_raster_path=output_tif,
+                                                      zipped_data=self.zipped_data,
+                                                      selected_pnv_classes=self.class_selection)
+
+    def plot_area_gain_loss(self):
+        """
+        Plots afforestation area gains and losses as a world map
+        """
+        tif_files = self.filter_tif_files_by_selection(data_path=PREPROCESSED_DATA_PATH,
+                                                       merged_agri_data=self.merge_data,
+                                                       intersected_data=True)
+
+        for tif_file_path in tqdm(tif_files, desc="Processing TIFF files"):
+            original_name = os.path.splitext(os.path.basename(tif_file_path))[0]
+            sheet_name = self.reduce_filename(original_name)
+
+            self.logger.info(f"Processing {tif_file_path} with sheet name {sheet_name}")
+            plot_name = f"{sheet_name}_intersected.png"
+            plot_path = os.path.join(OUTPUT_PATH, plot_name)
+            self.plot_tif(tif_file_path, plot_path, intersected_data=True)
 

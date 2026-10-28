@@ -12,6 +12,8 @@ HILDAv2_DATA_2020_PATH = os.path.join(INPUT_RAW_DATA_PATH, 'hilda_plus_states_20
 
 HILDAv2_DATA_2015_NEW_CRD_PATH = os.path.join(OUTPUT_PATH, 'hilda_plus_2015_v2_epsg8857.tif')
 HILDAv2_DATA_2020_NEW_CRD_PATH = os.path.join(OUTPUT_PATH, 'hilda_plus_2020_v2_epsg8857.tif')
+HILDAv2_DATA_2015_NEW_CRD_ZIP_PATH = os.path.join(OUTPUT_PATH, 'hilda_plus_2015_v2_epsg8857.zip')
+HILDAv2_DATA_2020_NEW_CRD_ZIP_PATH = os.path.join(OUTPUT_PATH, 'hilda_plus_2020_v2_epsg8857.zip')
 
 # HILDA v1.0 data path (Winkler et al., 2021)
 HILDAv1_DATA_2015_PATH = os.path.join(INPUT_RAW_DATA_PATH, 'hilda_plus_2015_states_GLOB-v1-0_base-map_wgs84-nn.tif')

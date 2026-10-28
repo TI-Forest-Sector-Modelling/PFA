@@ -18,7 +18,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from PNV.paths.paths import OUTPUT_PATH, INPUT_RAW_DATA_PATH
 from PNV.user_input.default_parameters import TOOLBOX_INPUT, USER_INPUT
 from PNV.src.base_logger import get_logger
-from PNV.src.defines import PotentialNaturalVegetationArea, Coordinates
+from PNV.src.defines import PotentialNaturalVegetationArea, Coordinates, ParamNames
 
 
 class PnvDataAnalysis:
@@ -32,25 +32,26 @@ class PnvDataAnalysis:
         self.current_dt = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
         self.logger = get_logger(user_path=None)
 
-        self.selected_pnv_classes = pj_user_input["CLASS_SELECTION"]
+        self.selected_pnv_classes = pj_user_input[ParamNames.class_selection.value]
+        self.gain_loss_analysis = pj_user_input[ParamNames.calc_gain_loss.value]
 
-        self.selected_year = tb_user_input['SELECT_YEAR']
-        self.selected_rcp = tb_user_input['SELECT_RCP']
-        self.selected_agg_lvl = tb_user_input['SELECT_AGG_LVL']
-        self.selected_iso = tb_user_input['SELECT_ISO']
-        self.rel_val_tolerance = tb_user_input['REL_VAL_TOLERANCE']
-        self.merge_agri_data = tb_user_input['MERGE_AGRI_DATA']
+        self.selected_year = tb_user_input[ParamNames.select_year.value]
+        self.selected_rcp = tb_user_input[ParamNames.select_rcp.value]
+        self.selected_agg_lvl = tb_user_input[ParamNames.select_agg_lvl.value]
+        self.selected_iso = tb_user_input[ParamNames.select_iso.value]
+        self.rel_val_tolerance = tb_user_input[ParamNames.rel_val_tolerance.value]
+        self.merge_agri_data = tb_user_input[ParamNames.merge_agri_data.value]
 
-        self.save_figures = tb_user_input['SAVE_FIGURE']
+        self.save_figures = tb_user_input[ParamNames.save_figure.value]
 
         self.input_folder = INPUT_RAW_DATA_PATH
         self.output_folder = OUTPUT_PATH
-        self.output_name = tb_user_input['OUTPUT_NAME']
+        self.output_name = tb_user_input[ParamNames.output_name.value]
 
         self.pnv_raw_data = self.readin_pnv_data()
         self.geo_data = self.readin_geo_data()
-        self.fontsize = self.define_format(paper_format=tb_user_input['PAPER_FORMAT'])
-        self.color_palette = self.define_color_palette(selected_pnv_classes=tb_user_input['SELECT_PNV_CLASS'])
+        self.fontsize = self.define_format(paper_format=tb_user_input[ParamNames.paper_format.value])
+        self.color_palette = self.define_color_palette(selected_pnv_classes=tb_user_input[ParamNames.class_selection.value])
 
         self.pnv_data_extrapolated = {}
         self.pnv_forest_data_raw = {}
@@ -714,18 +715,18 @@ class PnvDataAnalysis:
         """
         Bundles and executes all functions to process and visualize the data based on the user input.
         """
+        if not self.gain_loss_analysis:
+            self.preprocess_pnv_data()
 
-        self.preprocess_pnv_data()
+            self.pnv_bar_plot(plot_option='rel',  # options: ['abs', 'rel']
+                              aggregate_forest=False,
+                              )
 
-        self.pnv_bar_plot(plot_option='rel',  # options: ['abs', 'rel']
-                          aggregate_forest=False,
-                          )
-
-        self.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
-                           winkel_reproject=False,
-                           dissolve_map_regions=True
-                           )
-        self.logger.info(f"PNV data analysis completed")
+            self.pnv_world_map(fig_option='bar_chart',  # options: ['pie_chart', 'bar_chart']
+                               winkel_reproject=False,
+                               dissolve_map_regions=True
+                               )
+            self.logger.info(f"PNV data analysis completed")
 
     def toolbox_gif(self):
         self.generate_gif()
@@ -736,7 +737,7 @@ if __name__ == "__main__":
     pnv_analysis = PnvDataAnalysis(tb_user_input=TOOLBOX_INPUT, pj_user_input=USER_INPUT)
 
     pnv_analysis.preprocess_pnv_data()
-    if USER_INPUT['GENERATE_FIG']:
+    if USER_INPUT[ParamNames.generate_fig.value]:
         pnv_analysis.pnv_bar_plot(plot_option='rel',  # options: ['abs', 'rel']
                                   aggregate_forest=False  # options: True or False
                                   )
@@ -745,7 +746,7 @@ if __name__ == "__main__":
                                    winkel_reproject=False,
                                    dissolve_map_regions=True
                                    )
-    if USER_INPUT['GENERATE_GIF']:
+    if USER_INPUT[ParamNames.generate_gif.value]:
         pnv_analysis.generate_gif()
     pnv_analysis.logger.info(f"PNV data analysis completed")
 

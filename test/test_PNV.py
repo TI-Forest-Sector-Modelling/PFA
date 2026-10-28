@@ -1,6 +1,6 @@
 import unittest
-from PNV.src import main
-from PNV.src.logic import ProcessingArea
+from PNV import main
+from PNV.user_input.default_parameters import USER_INPUT, TOOLBOX_INPUT
 
 
 class TestPNVClass(unittest.TestCase):
@@ -8,7 +8,7 @@ class TestPNVClass(unittest.TestCase):
         """
         Unittest for the main function of the PFA project.
         """
-        main.main(plot_fig=True)
+        main(pj_user_input=USER_INPUT, tb_user_input=TOOLBOX_INPUT)
 
 
 if __name__ == '__main__':

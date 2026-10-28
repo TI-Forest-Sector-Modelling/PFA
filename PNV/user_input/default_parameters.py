@@ -1,14 +1,17 @@
+from PNV.src.defines import ParamNames
+
 USER_INPUT = {
-    'PROCESS_DATA': True ,  # False: no preprocessing and transformation of coordinate system; True: transforming
+    ParamNames.process_data.value: False,  # False: no preprocessing and transformation of coordinate system; True: transforming
     # coordinate system to another
-    'CLASS_SELECTION': 20,  # 6 or 20 based on choosing hard classes
-    'PLOT_MAPS': True,
-    'PLOT_DOWNSCALE_FACTOR': 4,  # Factor to downscale plotted world maps (no downscale == 1)
-    'ZIPPED_DATA': True,
-    'MERGE_AGRI_DATA': True,
-    'YEAR_AGRI_DATA': 2020,  # Options: 2015, 2020 (From HILDA+ v2.0 Winkler et al. 2025)
-    'GENERATE_FIG': True,
-    'GENERATE_GIF': True
+    ParamNames.class_selection.value: 6,  # 6 or 20 based on choosing hard classes
+    ParamNames.plot_maps.value: True,
+    ParamNames.plot_downscale_factor.value: 100,  # Factor to downscale plotted world maps (no downscale == 1)
+    ParamNames.zipped_data.value: True,
+    ParamNames.merge_agri_data.value: True,
+    ParamNames.year_agri_data.value: 2020,  # Options: 2015, 2020 (From HILDA+ v2.0 Winkler et al. 2025)
+    ParamNames.generate_fig.value: True,
+    ParamNames.generate_gif.value: True,
+    ParamNames.calc_gain_loss.value: False
 }
 
 SRC_CRS = 'EPSG:4326'
@@ -34,14 +37,14 @@ Information about TOOLBOX_INPUT:
 """
 
 TOOLBOX_INPUT = {
-    'SELECT_PNV_CLASS': 20,
-    'MERGE_AGRI_DATA': True,
-    'SELECT_YEAR': 2050,
-    'SELECT_RCP': ['rcp26', 'rcp45', 'rcp85'],
-    'SELECT_AGG_LVL': 'continents',
-    'SELECT_ISO': ['big_10'],
-    'REL_VAL_TOLERANCE': 0.3,
-    'PAPER_FORMAT': True,
-    'SAVE_FIGURE': True,
-    'OUTPUT_NAME': '_6k'
+    ParamNames.class_selection.value: 20,
+    ParamNames.merge_agri_data.value: True,
+    ParamNames.select_year.value: 2050,
+    ParamNames.select_rcp.value: ['rcp26', 'rcp45', 'rcp85'],
+    ParamNames.select_agg_lvl.value: 'continents',
+    ParamNames.select_iso.value: ['big_10'],
+    ParamNames.rel_val_tolerance.value: 0.3,
+    ParamNames.paper_format.value: True,
+    ParamNames.save_figure.value: True,
+    ParamNames.output_name.value: '_6k'
 }

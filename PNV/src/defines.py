@@ -108,3 +108,29 @@ class Coordinates(Enum):
                                     'Russian Federation': [6194311.927259675, 5964589.1623098105],
                                     'South America': [-4463881.45747334, -7169806.657055408]
                                     }
+
+
+class ParamNames(Enum):
+    """
+    Closs to hold names of parameters
+    """
+    process_data = "process_data"
+    class_selection = "class_selection"
+    plot_maps = "plot_maps"
+    plot_downscale_factor = "plot_downscale_factor"
+    zipped_data = "zipped_data"
+    merge_agri_data = "merge_agri_data"
+    year_agri_data = "year_agri_data"
+    generate_fig = "generate_fig"
+    generate_gif = "generate_gif"
+    calc_gain_loss = "clac_gain_loss"
+
+    select_year = "select_year"
+    select_rcp = "select_rcp"
+    select_agg_lvl = "select_agg_lvl"
+    select_iso = "select_iso"
+    rel_val_tolerance = "rel_val_tolerance"
+    paper_format = "paper_format"
+    save_figure = "save_figure"
+    output_name = "output_name"
+
