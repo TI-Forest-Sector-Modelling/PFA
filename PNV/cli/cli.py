@@ -81,7 +81,7 @@ def cli():
     help='Flag to calculate area gains and losses via cross-scenario analysis.'
 )
 def pfa_cli(process_data, class_selection, plot_maps, plot_downscale_factor, merge_agri_data, year_agri_data,
-            generate_fig, generate_gif, calc_gain_loss_loss):
+            generate_fig, generate_gif, calc_gain_loss):
     """starts PFA model"""
     cli_pj_user_input = {
         ParamNames.process_data.value: process_data,
@@ -93,7 +93,7 @@ def pfa_cli(process_data, class_selection, plot_maps, plot_downscale_factor, mer
         ParamNames.year_agri_data.value: year_agri_data,
         ParamNames.generate_fig.value: generate_fig,
         ParamNames.generate_gif.value: generate_gif,
-        ParamNames.calc_gain_loss.value: calc_gain_loss_loss
+        ParamNames.calc_gain_loss.value: calc_gain_loss
     }
 
     cli_tb_user_input = {
