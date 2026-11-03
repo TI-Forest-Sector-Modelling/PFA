@@ -4,6 +4,7 @@ USER_INPUT = {
     ParamNames.process_data.value: True,  # False: no preprocessing and transformation of coordinate system; True: transforming
     # coordinate system to another
     ParamNames.class_selection.value: 6,  # 6 or 20 based on choosing hard classes
+    ParamNames.isimip_selection.value: "3b",  # 2b or 3b
     ParamNames.plot_maps.value: True,
     ParamNames.plot_downscale_factor.value: 100,  # Factor to downscale plotted world maps (no downscale == 1)
     ParamNames.zipped_data.value: True,

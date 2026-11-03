@@ -27,6 +27,14 @@ def cli():
     help="Selected number of classes."
 )
 @click.option(
+    '-IS', f'--{ParamNames.isimip_selection.value}', f'{ParamNames.isimip_selection.value}',
+    default=USER_INPUT[ParamNames.isimip_selection.value],
+    show_default=True,
+    required=True,
+    type=int,
+    help="Selected ISIMIP data."
+)
+@click.option(
     '-PM', f'--{ParamNames.plot_maps.value}', f'{ParamNames.plot_maps.value}',
     default=USER_INPUT[ParamNames.plot_maps.value],
     show_default=True, required=True, type=bool,
@@ -80,12 +88,13 @@ def cli():
     type=bool,
     help='Flag to calculate area gains and losses via cross-scenario analysis.'
 )
-def pfa_cli(process_data, class_selection, plot_maps, plot_downscale_factor, merge_agri_data, year_agri_data,
-            generate_fig, generate_gif, calc_gain_loss):
+def pfa_cli(process_data, class_selection, isimip_selection, plot_maps, plot_downscale_factor, merge_agri_data,
+            year_agri_data, generate_fig, generate_gif, calc_gain_loss):
     """starts PFA model"""
     cli_pj_user_input = {
         ParamNames.process_data.value: process_data,
         ParamNames.class_selection.value: class_selection,
+        ParamNames.isimip_selection.value: isimip_selection,
         ParamNames.plot_maps.value: plot_maps,
         ParamNames.plot_downscale_factor.value: plot_downscale_factor,
         ParamNames.zipped_data.value: USER_INPUT[ParamNames.zipped_data.value],

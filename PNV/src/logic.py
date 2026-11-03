@@ -39,6 +39,7 @@ class ProcessingArea:
         self.time_stamp = dt.datetime.now().strftime("%Y%m%dT%H-%M-%S")
         self.pj_user_input = pj_user_input
         self.class_selection = pj_user_input[ParamNames.class_selection.value]
+        self.isimip_selection = pj_user_input[ParamNames.isimip_selection.value]
         self.zipped_data = pj_user_input[ParamNames.zipped_data.value]
         self.process_data = pj_user_input[ParamNames.process_data.value]
         self.merge_data = pj_user_input[ParamNames.merge_agri_data.value]
@@ -84,15 +85,17 @@ class ProcessingArea:
         :return: List of filtered TIF files relevant to the selected class.
         """
         if self.class_selection == 6:
+            pattern = f"biomes_iucn_{self.isimip_selection}"
             if self.zipped_data:
-                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.zip")
             else:
-                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.tif')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.tif")
         elif self.class_selection == 20:
+            pattern = f"biomes_biome6k_{self.isimip_selection}"
             if self.zipped_data:
-                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.zip')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.zip")
             else:
-                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.tif')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.tif")
         else:
             raise ValueError("Invalid class selection. Must be 6 or 20.")
 
@@ -158,15 +161,17 @@ class ProcessingArea:
         """
         data_path = PREPROCESSED_DATA_PATH
         if self.class_selection == 6:
+            pattern = f"biomes_iucn_{self.isimip_selection}"
             if self.zipped_data:
-                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.zip')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.zip")
             else:
-                pattern = os.path.join(data_path, 'biomes_iucn.hcl*.tif')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.tif")
         elif self.class_selection == 20:
+            pattern = f"biomes_biome6k_{self.isimip_selection}"
             if self.zipped_data:
-                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.zip')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.zip")
             else:
-                pattern = os.path.join(data_path, 'biomes_biome6k.hcl*.tif')
+                pattern = os.path.join(data_path, f"{pattern}.hcl*.tif")
 
         all_tif_files = glob.glob(pattern)
 

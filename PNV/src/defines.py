@@ -116,6 +116,7 @@ class ParamNames(Enum):
     """
     process_data = "process_data"
     class_selection = "class_selection"
+    isimip_selection = "isimip_selection"
     plot_maps = "plot_maps"
     plot_downscale_factor = "plot_downscale_factor"
     zipped_data = "zipped_data"
