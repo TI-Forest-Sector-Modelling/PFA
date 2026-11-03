@@ -1,4 +1,4 @@
-colors_6 = ['white', '#65b2ff', '#0020ca', '#009a18', '#caffca', '#bbcb35', 'white']
+colors_6 = ['white', '#1b7837', '#2a7c8e', '#e6c84b', '#caffca', '#bbcb35', 'white']
 labels_6 = [
     'NA', 'Tropical-subtropical forest biome', 'Temperate-boreal forests and woodlands biome',
     'Shrublands and shrubby woodland biome', 'Savannas ans grassland biomes', 'Desert and semi desert biomes',
@@ -6,13 +6,14 @@ labels_6 = [
 ]
 
 colors_6_forest = ['white', '#1b7837', '#2a7c8e', '#e6c84b']
+colors_6_forest_tb = ['#e6c84b', '#2a7c8e', '#1b7837']
 labels_6_forest = ['NA', 'Tropical-subtropical forest biome', 'Temperate-boreal forests and woodlands biome',
                    'Shrublands and shrubby woodland biome']
 
 colors_20 = [
-    'white', '#65b2ff', '#0020ca', '#009a18', '#caffca', '#bbcb35', '#f7ffca', '#798649',
-    '#e7e718', '#65ff9a', '#d29e96', '#ffba35', '#55eb49', '#ff9adf', '#8ea228',
-    '#ae7d20', '#1c5510', '#baff35', '#659208', '#000065', '#ffba9a'
+    'white', '#4776B8', '#203F78', '#256B9A', '#3C98A4', '#187E76', '#E8D6A7', '#9B83B7', '#C3AED7', '#765A98',
+    '#DDD0E8', '#D8BC65', '#79B96A', '#357F52', '#929B43', '#C4A14B', '#166B3B', '#E5A34D', '#58A844', '#43A58A',
+    '#C58B5B',
 ]
 labels_20 = [
     'NA', 'Cold deciduous forest', 'Cold evergreen needleleaf forest', 'Cool evergreen needleleaf forest',
@@ -24,8 +25,10 @@ labels_20 = [
     'Warm-temperate evergreen broadleaf and mixed forest', 'Xerophytic woods/scrub'
 ]
 
-colors_20_forest = ['white', '#2a5542', '#1c3f27', '#276138', '#3b7a57', '#5c946e', '#6b8e23', '#3a5f0b', '#91b493',
-                    '#8fbc8f', '#228b22', '#32cd32', '#adff2f', '#c2b280']
+colors_20_forest = ['white', '#4776B8', '#203F78', '#256B9A', '#3C98A4', '#187E76', '#79B96A', '#357F52', '#929B43',
+                    '#C4A14B', '#166B3B', '#58A844', '#43A58A', '#C58B5B']
+colors_20_forest_tb = ['#4776B8', '#203F78', '#256B9A', '#3C98A4', '#187E76', '#79B96A', '#357F52', '#929B43',
+                       '#C4A14B', '#166B3B', '#58A844', '#43A58A', '#C58B5B']
 labels_20_forest = ['NA', 'Cold deciduous forest', 'Cold evergreen needleleaf forest', 'Cool evergreen needleleaf forest',
                     'Cool mixed forest', 'Cool temperate rainforest', 'Temperate deciduous broadleaf forest',
                     'Temperate evergreen needleleaf open woodland', 'Temperate sclerophyll woodland and shrubland',
