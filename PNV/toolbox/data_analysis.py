@@ -19,6 +19,7 @@ from PNV.paths.paths import OUTPUT_PATH, INPUT_RAW_DATA_PATH
 from PNV.user_input.default_parameters import TOOLBOX_INPUT, USER_INPUT
 from PNV.src.base_logger import get_logger
 from PNV.src.defines import PotentialNaturalVegetationArea, Coordinates, ParamNames
+from PNV.src.datamanager import colors_6_forest_tb, colors_20_forest_tb
 
 
 class PnvDataAnalysis:
@@ -111,9 +112,9 @@ class PnvDataAnalysis:
         :return: Color palette.
         """
         if self.selected_pnv_classes == 6:
-            color_palette = sns.color_palette("Accent")
+            color_palette = colors_6_forest_tb
         else:
-            color_palette = plt.get_cmap('Spectral')(np.linspace(0, 1.5, self.selected_pnv_classes))
+            color_palette = colors_20_forest_tb
         return color_palette
 
     def split_pnv_data(self):
