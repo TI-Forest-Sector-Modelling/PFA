@@ -31,7 +31,7 @@ def cli():
     default=USER_INPUT[ParamNames.isimip_selection.value],
     show_default=True,
     required=True,
-    type=int,
+    type=str,
     help="Selected ISIMIP data."
 )
 @click.option(
