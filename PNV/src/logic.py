@@ -560,16 +560,11 @@ class ProcessingArea:
         self.logger.info(f"Merge forest and agricultural area data")
         if self.year_agri_data == 2015:
             agri_data_file = HILDAv2_DATA_2015_PATH
-            if self.zipped_data:
-                new_agri_data_file = HILDAv2_DATA_2015_NEW_CRD_ZIP_PATH
-            else:
-                new_agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
+            new_agri_data_file = HILDAv2_DATA_2015_NEW_CRD_PATH
         elif self.year_agri_data == 2020:
             agri_data_file = HILDAv2_DATA_2020_PATH
-            if self.zipped_data:
-                new_agri_data_file = HILDAv2_DATA_2020_NEW_CRD_ZIP_PATH
-            else:
-                new_agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
+            new_agri_data_file = HILDAv2_DATA_2020_NEW_CRD_PATH
+
         else:
             raise ValueError("Invalid year of HILDA data. Must be 2015 or 2020.")
 

@@ -221,6 +221,18 @@ def reproject_and_save(src_raster_path, output_path, forest_raster_path, zipped_
                 with rasterio.open(output_path, 'w', **output_meta) as dst_raster:
                     dst_raster.write(reprojected_data, 1)
 
+                if zipped_data:
+                   output_zip_path = output_path.replace(".tif", ".zip")
+
+                   with zipfile.ZipFile(output_zip_path,
+                                        mode='w',
+                                        compression=zipfile.ZIP_DEFLATED,
+                                        compresslevel=6) as zip_ref:
+                       zip_ref.write(
+                           output_path,
+                           arcname=os.path.basename(output_path)
+                       )
+                   os.remove(output_path)
 
 def create_dynamic_mask(land_use_data, land_use_classes, include_exclude):
     """
