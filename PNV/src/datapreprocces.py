@@ -82,14 +82,14 @@ def process_all_files(self, input_dir: str, output_dir: str, src_crs: str, dst_c
 
     if self.class_selection == 6:
         if self.isimip_selection == "2b":
-            pattern = os.path.join(input_dir, 'biomes_iucn_2b.hcl*.tif')
+            pattern = os.path.join(input_dir, 'biomes_iucn.2b.hcl*.tif')
         else:
-            pattern = os.path.join(input_dir, 'biomes_iucn_3b.hcl*.tif')
+            pattern = os.path.join(input_dir, 'biomes_iucn.3b.hcl*.tif')
     elif self.class_selection == 20:
         if self.isimip_selection == "2b":
-            pattern = os.path.join(input_dir, 'biomes_biome6k_2b.hcl*.tif')
+            pattern = os.path.join(input_dir, 'biomes_biome6k.2b.hcl*.tif')
         else:
-            pattern = os.path.join(input_dir, 'biomes_biome6k_3b.hcl*.tif')
+            pattern = os.path.join(input_dir, 'biomes_biome6k.3b.hcl*.tif')
     else:
         raise ValueError("Invalid class selection. Must be 6 or 20.")
 

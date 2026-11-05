@@ -85,13 +85,13 @@ class ProcessingArea:
         :return: List of filtered TIF files relevant to the selected class.
         """
         if self.class_selection == 6:
-            pattern = f"biomes_iucn_{self.isimip_selection}"
+            pattern = f"biomes_iucn.{self.isimip_selection}"
             if self.zipped_data:
                 pattern = os.path.join(data_path, f"{pattern}.hcl*.zip")
             else:
                 pattern = os.path.join(data_path, f"{pattern}.hcl*.tif")
         elif self.class_selection == 20:
-            pattern = f"biomes_biome6k_{self.isimip_selection}"
+            pattern = f"biomes_biome6k.{self.isimip_selection}"
             if self.zipped_data:
                 pattern = os.path.join(data_path, f"{pattern}.hcl*.zip")
             else:
