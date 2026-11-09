@@ -4,7 +4,7 @@
 ### New Features
 - **Merge PFA data with other land use types:**
   - Spatial data from Bonannella et al. (2023) are merged with urban and agricultural land use data from HILDA+ (Winkler et al., 2021).
-  - Windowing and downscaling approaches are used to reduce computational load.
+  - Approches of windowing for the spatial overlay steps and downscaling for visualization of output figures are used to reduce computational load of the project
 - **Toolbox:**
   - Extended toolbox to process merged forest, agricultural, and urban land use data.
 - **OS compatibility:**
