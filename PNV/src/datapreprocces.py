@@ -195,7 +195,12 @@ def reproject_and_save(src_raster_path, output_path, forest_raster_path, zipped_
             logger.info(f'The rasters of the agriculture and forest rasters are not aligned. Resampling is required.')
             logger.info(f'Reproject and resample agriculture raster.')
 
-            if not os.path.isfile(output_path):
+            if zipped_data:
+                check_output_path = output_path.replace(".tif", ".zip")
+            else:
+                check_output_path = output_path
+
+            if not os.path.isfile(check_output_path):
                 reprojected_data = np.empty(target_shape, dtype=np.float32)
 
                 reproject(
