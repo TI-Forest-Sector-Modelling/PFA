@@ -521,7 +521,7 @@ class ProcessingArea:
             reduced = '_'.join(parts[1:6])
         else:
             reduced = filename[:length]
-        return reduced[:length]
+        return reduced
 
     def save_results(self, combined_df: pd.DataFrame):
         """
