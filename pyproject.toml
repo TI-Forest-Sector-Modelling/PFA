@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PFA"
-version = "1.0.0"
+version = "2.0.0"
 authors = [
     {name = "Julia Tandetzki", email = "julia.tandetzki@thuenen.de"},
     {name = "Tomke Honkomp", email = "tomke.honkomp@thuenen.de"}
