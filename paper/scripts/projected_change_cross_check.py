@@ -16,12 +16,12 @@ from PNV.src.defines import PotentialNaturalVegetationArea
 
 OUTPUTS = os.path.join(REPO_ROOT, "PNV", "data", "outputs")
 # 20_class_combined.pkl does not contain the base period, which is taken from the run of 2025-04-08
-PNV_RESULTS = os.path.join(OUTPUTS, "20_class_combined.pkl")
-PNV_RESULTS_BASE = os.path.join(OUTPUTS, "20250408T11-58-50_20_class_combined.pkl")
+PNV_RESULTS = os.path.join(OUTPUTS, "6_class_combined.pkl")
+PNV_RESULTS_BASE = os.path.join(OUTPUTS, "20261119T14-41-04_6_class_combined_merged.pkl")
 PFA_RESULTS = os.path.join(OUTPUTS, "20261026T10-41-12_20_class_combined_merged.pkl")
 GEO_DATA = os.path.join(REPO_ROOT, "PNV", "data", "raw", "geo_data.csv")
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
-SELECTED_PNV_CLASSES = 20
+SELECTED_PNV_CLASSES = 6
 
 KM2_TO_MHA = 1 / 1e4  #1 Mio ha = 10,000km2
 
@@ -61,13 +61,9 @@ def parse_sheet_name(sheet_name: str) -> pd.Series:
 
 def load_pnv() -> pd.DataFrame:
     """
-    Combines the base period of the run of 2025-04-08 with the future periods of 20_class_combined.pkl.
+    Reads the PNV results (6_class_combined.pkl already contains the base period).
     """
-    pnv_data = pd.read_pickle(PNV_RESULTS)
-    pnv_base = pd.read_pickle(PNV_RESULTS_BASE)
-    pnv_base = pnv_base[pnv_base["Sheet Name"].str.contains("_a_1979")]
-    return pd.concat([pnv_base, pnv_data], ignore_index=True)
-
+    return pd.read_pickle(PNV_RESULTS)
 
 def prepare(data: pd.DataFrame, geo_data: pd.DataFrame) -> pd.DataFrame:
     """
