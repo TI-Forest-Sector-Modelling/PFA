@@ -8,6 +8,7 @@ Luo et al, (2022), Sci. Data 9, 110, doi:10.1038/s41597-022-01204-w -> China
 import os
 import re
 import sys
+import glob
 import pandas as pd
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # PFA/ (scripts/ is in paper/)
@@ -17,8 +18,15 @@ from PNV.src.defines import PotentialNaturalVegetationArea
 OUTPUTS = os.path.join(REPO_ROOT, "PNV", "data", "outputs")
 # 20_class_combined.pkl does not contain the base period, which is taken from the run of 2025-04-08
 PNV_RESULTS = os.path.join(OUTPUTS, "6_class_combined.pkl")
-PNV_RESULTS_BASE = os.path.join(OUTPUTS, "20261119T14-41-04_6_class_combined_merged.pkl")
-PFA_RESULTS = os.path.join(OUTPUTS, "20261026T10-41-12_20_class_combined_merged.pkl")
+
+PNV_RESULTS_BASE = os.path.join(OUTPUTS, "*_6_class_combined_merged.pkl")
+PFA_RESULTS = os.path.join(OUTPUTS, "*_class_combined_merged.pkl")
+
+PNV_RESULTS_BASE = glob.glob(PNV_RESULTS_BASE)
+PNV_RESULTS_BASE = max(PNV_RESULTS_BASE, key=os.path.getctime)
+PFA_RESULTS = glob.glob(PFA_RESULTS)
+PFA_RESULTS = max(PFA_RESULTS, key=os.path.getctime)
+
 GEO_DATA = os.path.join(REPO_ROOT, "PNV", "data", "raw", "geo_data.csv")
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
 SELECTED_PNV_CLASSES = 6
