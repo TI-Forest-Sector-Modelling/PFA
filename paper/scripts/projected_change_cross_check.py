@@ -3,6 +3,14 @@ cross check of projected changes of forest-related PNV against literature.
 Compares the projected change in forest-related PNV (filtered input) and in PFA (forest-related PNV intersected with HILDA+ v2.0 land use 2020, held constant) for Africa and China with
 Yahaya et. al (2024), Sci. Rep. 14m 12315, doi:10.1038/s41598-024-61035-0 -> Africa
 Luo et al, (2022), Sci. Data 9, 110, doi:10.1038/s41597-022-01204-w -> China
+
+
+Note: The PFA results (forest-related PNV intersected with HILDA+ land use 2020)
+are not included in the repository due to their size. Before running this
+cross-check, run the PFA pipeline with 6 or 20 PNV classes and the HILDA+ merge enabled.
+This creates
+    PNV/data/outputs/<timestamp>_6_class_combined_merged.pkl
+Set PFA_RESULTS to this file before running the script.
 """
 
 import os
